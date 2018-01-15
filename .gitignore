@@ -1,2 +1,3 @@
-eploymentPackage.zip
+deploymentPackage.zip
 node_modules/*
+.idea/*
