@@ -7,7 +7,7 @@ if [ -e "$OUTFILE" ]; then
     rm $OUTFILE
 fi
 
-# tar -czvf $OUTFILE ./lambda/* # cna't get tar to work
+# tar -czvf $OUTFILE ./lambda/* # can't get tar to work
 cd lambda
 zip -r ../$OUTFILE * -x .*
-aws lambda update-function-code --function-name git-lfs-test --zip-file "fileb://$FULLNAME"
+aws lambda update-function-code --function-name gatewayTest --zip-file "fileb://$FULLNAME"
