@@ -17,16 +17,18 @@ const dynamo = new doc.DynamoDB();
 * PUT, or DELETE request respectively, passing in the payload to the
 * DynamoDB API as a JSON body.
 */
-exports.handler = (event, context, callback) => {
+exports.handler = function(event, context, callback) {
     //console.log('Received event:', JSON.stringify(event, null, 2));
 
-    const done = (err, res) => callback(null, {
-        statusCode: err ? '400' : '200',
-        body: err ? err.message : JSON.stringify(res),
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    });
+    const done = function(err, res) {
+        callback(null, {
+            statusCode: err ? '400' : '200',
+            body: err ? err.message : JSON.stringify(res),
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+    };
 
     switch (event.httpMethod) {
         case 'DELETE':
@@ -42,6 +44,6 @@ exports.handler = (event, context, callback) => {
             done(null, "upload: PUT received");
             break;
         default:
-            done(new Error(`Unsupported method "${event.httpMethod}"`));
+            done(new Error("Unsupported method!"));
     }
 };
