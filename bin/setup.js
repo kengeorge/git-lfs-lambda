@@ -166,7 +166,8 @@ function putIntegration(context, callback) {
         resourceId: context.proxyResource.id,
 
         type: "AWS_PROXY",
-        httpMethod: "POST",
+        httpMethod: "ANY",
+        integrationHttpMethod: "ANY",
         uri: context.lambda.testUri,
         passthroughBehavior: "WHEN_NO_MATCH",
         contentHandling: "CONVERT_TO_TEXT",
@@ -184,7 +185,7 @@ function putIntegrationResponse(context, callback) {
     var params = {
         restApiId: context.api.id,
         resourceId: context.proxyResource.id,
-        httpMethod: "POST",
+        httpMethod: "ANY",
         statusCode: "200",
         responseTemplates: {
                 "application/json": null
@@ -235,10 +236,8 @@ async.waterfall([
     putMethod,
     putMethodResponse,
     putIntegration,
-    /* left off here: seem to be unable to put integration due to httpmethod. Maybe needs POST but we're using ANY?
     putIntegrationResponse,
     getMethod
-    */
 ], function(err, results) {
     if (err) {
         console.log("ERROR!");
