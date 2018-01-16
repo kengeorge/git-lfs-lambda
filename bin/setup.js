@@ -1,7 +1,11 @@
 var AWS = require('aws-sdk');
 var async = require('async');
-AWS.config.region = "us-west-2";
-var api = new AWS.APIGateway();
+var util = require('util');
+var http = require('http');
+var fs = require('fs');
+var api;
+
+var exitCode = 0;
 
 function makeContext(callback) {
     var args = process.argv.slice(2);
@@ -13,16 +17,35 @@ function makeContext(callback) {
         },
         args: {
             resourceName: "{proxy+}",
+            stageName: "git_lfs_lambda_test",
+            region: "us-west-2",
+            urlFilePath: "./tmp/url",
         },
         lambda: {
             //TODO
             testUri: "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:548425624042:function:gatewayTest/invocations",
         }
     };
+
+    context.getHostName = function() {
+        return util.format('%s.execute-api.%s.amazonaws.com',
+            this.api.id, this.args.region);
+    };
+
+    context.getPath = function() {
+        return util.format('/%s/%s', context.args.stageName, "kggeorge");
+    };
+
     callback(null, context);
 }
 
-function checkForExisting(context, callback) {
+function configureAWS(context, callback) {
+    AWS.config.region = context.args.region;
+    api = new AWS.APIGateway();
+    callback(null, context);
+}
+
+function getApi(context, callback) {
     console.log("Checking for existing api with name " + context.api.name);
     api.getRestApis({limit: 100}, function (err, data) {
         for (key in data.items) {
@@ -127,6 +150,10 @@ function createResourceIfNeeded(context, callback) {
 
 function putMethod(context, callback) {
     console.log("Configuring method.");
+    if(!context.api) {
+        callback("Missing api?", context);
+        return;
+    }
     var params = {
         restApiId: context.api.id,
         resourceId: context.proxyResource.id,
@@ -225,9 +252,71 @@ function deleteExistingMethod(context, callback) {
     })
 }
 
+function deployApi(context, callback) {
+    var params = {
+        restApiId: context.api.id,
+        description: "Auto-generated api promotion.",
+        stageName: context.args.stageName,
+        stageDescription: "Testbed for this mess."
+    };
+    api.createDeployment(params, function (err, data) {
+        context.deployment = data;
+        callback(err, context);
+    });
+}
+
+function getStage(context, callback) {
+    var params = {
+        restApiId: context.api.id,
+        stageName: context.args.stageName,
+    };
+    api.getStage(params, function (err, data) {
+        context.stage = data;
+        callback(err, context);
+    })
+}
+
+function testCall(context, callback) {
+    var params = {
+        hostname: context.getHostName(),
+        path: context.getPath(),
+        method: "GET",
+        port: 443,
+        headers: {
+            "content-type": "application/json",
+            "x-amz-docs-region": context.args.region,
+        }
+    };
+    var req = http.request(params, function(response) {
+        response.on('data', function(chunk) {
+            console.log("BODY:" + chunk);
+        });
+        response.on('end', function(){
+            console.log("Response end");
+            callback(null, context);
+        })
+    });
+
+    req.on('error', function(e) {
+        callback(e, context);
+    });
+
+    //req.write(JSON.stringify({ testData: "foo" }));
+
+    req.end();
+}
+
+function writeOutput(context, callback) {
+    var url = util.format("https://%s%s", context.getHostName(), context.getPath());
+    fs.writeFile(context.args.urlFilePath, url, function(err){
+        callback(err, context);
+    });
+}
+
 async.waterfall([
     makeContext,
-    checkForExisting,
+    configureAWS,
+    getApi,
     updateOrCreateApi,
     getResources,
     createResourceIfNeeded,
@@ -237,13 +326,19 @@ async.waterfall([
     putMethodResponse,
     putIntegration,
     putIntegrationResponse,
-    getMethod
-], function(err, results) {
+    getMethod,
+    deployApi,
+    getStage,
+    writeOutput,
+], function(err, context) {
     if (err) {
         console.log("ERROR!");
         console.log(err, err.stack);
+        console.log(JSON.stringify(context, null, 2));
+        exitCode = 1;
     } else {
         console.log("Done!");
+        exitCode = 0;
     }
-    console.log(JSON.stringify(results, null, 2));
+    process.exit(exitCode);
 });

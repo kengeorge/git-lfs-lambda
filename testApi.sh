@@ -1,8 +1,10 @@
 #!/bin/bash
 
-curl  -X POST \
-    'https://8myudhff94.execute-api.us-west-2.amazonaws.com/test/something' \
-    -H 'content-type: application/json' \
+URI=`cat ./url`
+
+echo "calling $URI"
+curl -X POST "$URI" \
     -H 'x-amz-docs-region: us-west-2' \
     -d '{
+        "garbage":"hi"
     }'

@@ -4,7 +4,7 @@ console.log('Loading function');
 
 const doc = require('dynamodb-doc');
 
-const dynamo = new doc.DynamoDB();
+//const dynamo = new doc.DynamoDB();
 
 
 /**
@@ -17,33 +17,21 @@ const dynamo = new doc.DynamoDB();
 * PUT, or DELETE request respectively, passing in the payload to the
 * DynamoDB API as a JSON body.
 */
+
+function lambdaResponse(code, bodyObj) {
+    return {
+        statusCode: code,
+        headers: {
+            'content-type': 'application/json',
+        },
+        body: JSON.stringify(bodyObj)
+    };
+}
+
 exports.handler = function(event, context, callback) {
     //console.log('Received event:', JSON.stringify(event, null, 2));
-
-    const done = function(err, res) {
-        callback(null, {
-            statusCode: err ? '400' : '200',
-            body: err ? err.message : JSON.stringify(res),
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
+    var res = {
+        message: "api endpoint functional"
     };
-
-    switch (event.httpMethod) {
-        case 'DELETE':
-            done(null, "upload: DELETE received");
-            break;
-        case 'GET':
-            done(null, "upload: GET received");
-            break;
-        case 'POST':
-            done(null, "upload: POST received");
-            break;
-        case 'PUT':
-            done(null, "upload: PUT received");
-            break;
-        default:
-            done(new Error("Unsupported method!"));
-    }
+    callback(null, lambdaResponse(200, res));
 };
