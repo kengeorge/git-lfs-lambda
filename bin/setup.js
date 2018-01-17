@@ -1,8 +1,8 @@
 var AWS = require('aws-sdk');
 var async = require('async');
 var util = require('util');
-var http = require('http');
 var fs = require('fs');
+var config = JSON.parse(fs.readFileSync("./bin/config.json"));
 var api;
 
 var exitCode = 0;
@@ -17,9 +17,9 @@ function makeContext(callback) {
         },
         args: {
             resourceName: "{proxy+}",
-            stageName: "git_lfs_lambda_test",
-            region: "us-west-2",
-            urlFilePath: "./tmp/url",
+            stageName: config.stageName,
+            region: config.awsRegion,
+            outputFilePath: config.outputFilePath
         },
         lambda: {
             //TODO
@@ -276,39 +276,14 @@ function getStage(context, callback) {
     })
 }
 
-function testCall(context, callback) {
-    var params = {
-        hostname: context.getHostName(),
-        path: context.getPath(),
-        method: "GET",
-        port: 443,
-        headers: {
-            "content-type": "application/json",
-            "x-amz-docs-region": context.args.region,
-        }
-    };
-    var req = http.request(params, function(response) {
-        response.on('data', function(chunk) {
-            console.log("BODY:" + chunk);
-        });
-        response.on('end', function(){
-            console.log("Response end");
-            callback(null, context);
-        })
-    });
-
-    req.on('error', function(e) {
-        callback(e, context);
-    });
-
-    //req.write(JSON.stringify({ testData: "foo" }));
-
-    req.end();
-}
-
 function writeOutput(context, callback) {
     var url = util.format("https://%s%s", context.getHostName(), context.getPath());
-    fs.writeFile(context.args.urlFilePath, url, function(err){
+    var out = {
+        hostname: context.getHostName(),
+        path: context.getPath(),
+        url: url
+    };
+    fs.writeFile(context.args.outputFilePath, JSON.stringify(out), function(err){
         callback(err, context);
     });
 }

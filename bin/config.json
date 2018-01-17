@@ -1,0 +1,5 @@
+{
+  "outputFilePath": "./tmp/url",
+  "awsRegion": "us-west-2",
+  "stageName": "git_lfs_lambda_test"
+}

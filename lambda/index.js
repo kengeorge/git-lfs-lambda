@@ -1,9 +1,8 @@
 'use strict';
 
-console.log('Loading function');
+var m = require('./messages.js');
 
-const doc = require('dynamodb-doc');
-
+//const doc = require('dynamodb-doc');
 //const dynamo = new doc.DynamoDB();
 
 
@@ -31,7 +30,7 @@ function lambdaResponse(code, bodyObj) {
 exports.handler = function(event, context, callback) {
     //console.log('Received event:', JSON.stringify(event, null, 2));
     var res = {
-        message: "api endpoint functional"
+        message: m.testResponse
     };
     callback(null, lambdaResponse(200, res));
 };
