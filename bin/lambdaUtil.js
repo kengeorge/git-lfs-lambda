@@ -20,6 +20,10 @@ exports.deploy = function(functionName) {
         });
 }
 
+exports.remove = function(functionName) {
+    return lambda.deleteFunction({FunctionName: functionName}).promise();
+}
+
 function zip(functionName) {
     var deferred = Q.defer();
 

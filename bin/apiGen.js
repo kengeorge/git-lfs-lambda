@@ -1,4 +1,6 @@
 const lambda = require('./lambdaUtil.js');
+const gll = require('./base.js');
+const log = gll.log;
 
 /**
  * Targets:
@@ -26,7 +28,22 @@ var schema = {
 };
 
 var args = process.argv.slice(2);
-var name = args[0];
-lambda.deploy(name);
+var command = args[0];
+if(command == "clean") {
+    var rest =args.slice(1);
+    console.log(rest);
+    for(var i in rest) {
+        var name = rest[i];
+        lambda.remove(name)
+            .then(function (response) {
+                log("Function removed: %s", response);
+
+            })
+            .catch(function (err) {
+                log("Could not remove function %s: %s", name, err);
+            })
+            .done();
+    }
+}
 
 

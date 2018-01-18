@@ -1,11 +1,34 @@
-var AWS = require('aws-sdk');
-var async = require('async');
-var util = require('util');
-var fs = require('fs');
-var config = JSON.parse(fs.readFileSync("./bin/config.json"));
-var api;
 
-var exitCode = 0;
+//TODO rewrite all this
+async.waterfall([
+    makeContext,
+    configureAWS,
+    getApi,
+    updateOrCreateApi,
+    getResources,
+    createResourceIfNeeded,
+    getMethod,
+    deleteExistingMethod,
+    putMethod,
+    putMethodResponse,
+    putIntegration,
+    putIntegrationResponse,
+    getMethod,
+    deployApi,
+    getStage,
+    writeOutput,
+], function(err, context) {
+    if (err) {
+        console.log("ERROR!");
+        console.log(err, err.stack);
+        console.log(JSON.stringify(context, null, 2));
+        exitCode = 1;
+    } else {
+        console.log("Done!");
+        exitCode = 0;
+    }
+    process.exit(exitCode);
+});
 
 function makeContext(callback) {
     var args = process.argv.slice(2);
@@ -288,32 +311,3 @@ function writeOutput(context, callback) {
     });
 }
 
-async.waterfall([
-    makeContext,
-    configureAWS,
-    getApi,
-    updateOrCreateApi,
-    getResources,
-    createResourceIfNeeded,
-    getMethod,
-    deleteExistingMethod,
-    putMethod,
-    putMethodResponse,
-    putIntegration,
-    putIntegrationResponse,
-    getMethod,
-    deployApi,
-    getStage,
-    writeOutput,
-], function(err, context) {
-    if (err) {
-        console.log("ERROR!");
-        console.log(err, err.stack);
-        console.log(JSON.stringify(context, null, 2));
-        exitCode = 1;
-    } else {
-        console.log("Done!");
-        exitCode = 0;
-    }
-    process.exit(exitCode);
-});
