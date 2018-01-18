@@ -1,45 +1,22 @@
+const Q = require('Q');
+const fs = require('fs');
 const lambda = require('./lambdaUtil.js');
+
 const gll = require('./base.js');
 const log = gll.log;
 const pretty = gll.pretty;
-
-/**
- * Targets:
- * GIT REMOTE
- *   https://mygitserver.com/whatever/repo
- * LFS ROOT (git + .git/info/lfs)
- *   https://mygitserver.com/whatever/repo.git/info/lfs
- * BATCH API (lfs + /objects/batch)
- *   https://mygitserver.com/whatever/repo.git/info/lfs/objects/batch
- */
-
-var schema = {
-    //Path prefix to be applied to the apiGateway root before the resources paths
-    //repoBase: projectConfig.apiBase,
-    apis: {
-        batch: {
-            path: "/objects/batch",
-            methods: ["POST"],
-            requiredHeaders: {
-                "Accept": "application/vnd.git-lfs+json",
-                "Content-Type": "application/vnd.git-lfs+json",
-            }
-        }
-    }
-};
-
-var apis = ["batch", "locks"];
+const paths = gll.paths;
+const format = require('util').format;
 
 var args = process.argv.slice(2);
-
 var command = args.shift().toLowerCase();
 
 switch(command) {
     case "clean":
-        cleanFunctions(apis);
+        cleanFunctions();
         break;
     case "deploy":
-        deployFunctions(apis);
+        deployFunctions();
         break;
     default:
         log("Uknown operation %s", command);
@@ -47,40 +24,57 @@ switch(command) {
         break;
 }
 
-function cleanFunctions(functionNames) {
-    log("Removing functions %s", functionNames);
-    for(var i in functionNames) {
-        var name = functionNames[i];
-        clean(name);
+function readDirs(){
+    var deferred = Q.defer();
+    fs.readdir(paths.functionSourceRoot(), function(err, data) {
+        if(err) deferred.reject(new Error(err));
+        else deferred.resolve(data);
+    });
+    return deferred.promise;
+}
+
+function forEach(callFunc) {
+    return function (input) {
+        return Q.all(input.map(function (item) {
+            return callFunc(item);
+        }));
     }
+}
+
+function cleanFunctions() {
+    readDirs()
+        .then(forEach(clean))
+        .then(function(results) {
+            log("Clean results:\n%s", pretty(results));
+        })
+        .done();
 }
 
 function clean(functionName) {
-    lambda.remove(functionName)
+    return lambda.remove(functionName)
         .then(function (response) {
-            log("Function [%s] removed: %s", functionName, pretty(response));
-
+            return format("Function [%s] removed.", functionName);
         })
-        .catch(function (err) {
-            log("Could not remove function %s: %s", functionName, err);
-        })
-        .done();
+        .catch(function(err) {
+            return format("Could not remove function %s: [%s]", functionName, err);
+        });
 }
 
-function deployFunctions(functionNames) {
-    for(var i in functionNames) {
-        var name = functionNames[i];
-        deploy(name);
-    }
+function deployFunctions() {
+    readDirs()
+        .then(forEach(deploy))
+        .then(forEach(function (result) {
+            return format("Function [%s] deployed as [%s]", result.FunctionName, result.FunctionArn);
+        }))
+        .then(function (results) {
+            log("Deployment results: %s", pretty(results));
+        })
+        .done();
 }
 
 function deploy(functionName) {
-    lambda.deploy(functionName)
-        .then(function (response) {
-            log("Function [%s] deployed: %s", functionName, pretty(response));
-        })
-        .catch(function (err) {
-            log("Could not deploy function %s:  %s", functionName, err);
-        })
-        .done();
+    return lambda.deploy(functionName)
+        .catch(function(err) {
+            return format("Could not deploy function %s: [%s]", functionName, err);
+        });
 }

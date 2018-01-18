@@ -22,22 +22,31 @@ function projectRoot() {
 }
 
 function deploymentPackageFor(functionName) {
-    return path.join(projectRoot(),
+    return path.join(
+        projectRoot(),
         projectConfig.outputDir,
         format(projectConfig.deploymentPackageTemplate, functionName)
     );
 }
 
-function sourceRootFor(functionName) {
-    return path.join(projectRoot(),
+function functionSourceRoot(){
+    return path.join(
+        projectRoot(),
         projectConfig.sourceDir,
-        "functions",
+        "functions"
+    );
+}
+
+function sourceRootFor(functionName) {
+    return path.join(
+        functionSourceRoot(),
         functionName
     );
 }
 
 function commonRoot() {
-    return path.join(projectRoot(),
+    return path.join(
+        projectRoot(),
         projectConfig.sourceDir,
         "common"
     );
@@ -47,7 +56,7 @@ module.exports = {
     log: log,
     pretty: pretty,
     paths: {
-        projectRoot: projectRoot,
+        functionSourceRoot: functionSourceRoot,
         deploymentPackageFor: deploymentPackageFor,
         sourceRootFor: sourceRootFor,
         commonRoot: commonRoot
