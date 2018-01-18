@@ -2,6 +2,7 @@ const fs = require('fs');
 const AWS = require('aws-sdk');
 const format = require('util').format;
 const path = require('path');
+const Q = require('Q');
 
 const projectConfig = JSON.parse(fs.readFileSync("config.json"));
 AWS.config.region = projectConfig.awsRegion;
@@ -14,6 +15,14 @@ function log() {
 
 function pretty(data) {
     return JSON.stringify(data, null, 2);
+}
+
+function forEach(callFunc) {
+    return function (input) {
+        return Q.all(input.map(function (item) {
+            return callFunc(item);
+        }));
+    }
 }
 
 function projectRoot() {
@@ -52,6 +61,8 @@ function commonRoot() {
     );
 }
 
+
+
 module.exports = {
     log: log,
     pretty: pretty,
@@ -63,5 +74,6 @@ module.exports = {
     },
     configuredAWS: AWS,
     projectConfig: projectConfig,
+    forEach: forEach
 };
 

@@ -7,6 +7,7 @@ const log = gll.log;
 const pretty = gll.pretty;
 const paths = gll.paths;
 const format = require('util').format;
+const forEach = gll.forEach;
 
 var args = process.argv.slice(2);
 var command = args.shift().toLowerCase();
@@ -24,23 +25,6 @@ switch(command) {
         break;
 }
 
-function readDirs(){
-    var deferred = Q.defer();
-    fs.readdir(paths.functionSourceRoot(), function(err, data) {
-        if(err) deferred.reject(new Error(err));
-        else deferred.resolve(data);
-    });
-    return deferred.promise;
-}
-
-function forEach(callFunc) {
-    return function (input) {
-        return Q.all(input.map(function (item) {
-            return callFunc(item);
-        }));
-    }
-}
-
 function cleanFunctions() {
     readDirs()
         .then(forEach(clean))
@@ -48,16 +32,6 @@ function cleanFunctions() {
             log("Clean results:\n%s", pretty(results));
         })
         .done();
-}
-
-function clean(functionName) {
-    return lambda.remove(functionName)
-        .then(function (response) {
-            return format("Function [%s] removed.", functionName);
-        })
-        .catch(function(err) {
-            return format("Could not remove function %s: [%s]", functionName, err);
-        });
 }
 
 function deployFunctions() {
@@ -72,9 +46,28 @@ function deployFunctions() {
         .done();
 }
 
+function readDirs(){
+    var deferred = Q.defer();
+    fs.readdir(paths.functionSourceRoot(), function(err, data) {
+        if(err) deferred.reject(new Error(err));
+        else deferred.resolve(data);
+    });
+    return deferred.promise;
+}
+
+function clean(functionName) {
+    return lambda.remove(functionName)
+        .then(function (response) {
+            return format("Function [%s] removed.", functionName);
+        })
+        .catch(function(err) {
+            return format("Could not remove function %s: [%s]", functionName, err);
+        });
+}
+
 function deploy(functionName) {
     return lambda.deploy(functionName)
-        .catch(function(err) {
+        .catch(function (err) {
             return format("Could not deploy function %s: [%s]", functionName, err);
         });
 }
