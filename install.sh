@@ -5,3 +5,4 @@
 npm install aws-sdk
 npm install archiver
 npm install q
+npm install request
