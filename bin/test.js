@@ -1,8 +1,6 @@
 'use strict';
 
-const server = require('../lambda/index.js');
-const util = require('util');
-const fs = require('fs');
+require("./base.js");
 const request = require('request');
 
 console.log("CWD: " + process.cwd());
@@ -65,14 +63,7 @@ function callRemote() {
     });
 }
 
-function print(data) {
-    console.log(JSON.stringify(data, null, 2));
-}
 
-function log() {
-    var formatted = util.format.apply(this, arguments);
-    console.log(formatted);
-}
 
 function finish(err, data) {
     if(err) {

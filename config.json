@@ -1,0 +1,13 @@
+{
+  "outputFilePath": "./tmp/url",
+  "awsRegion": "us-west-2",
+  "stageName": "git_lfs_lambda_test",
+  "repo": "lambdaLfsTest",
+  "suffix": ".git/info/lfs",
+  "prefix": "whatever",
+  "functionRuntime": "nodejs6.10",
+  "lambdaRoleArn": "arn:aws:iam::548425624042:role/service-role/git-lfs-service",
+  "deploymentPackageTemplate": "deploymentPackage-%s.zip",
+  "outputDir": "tmp",
+  "sourceDir": "src"
+}

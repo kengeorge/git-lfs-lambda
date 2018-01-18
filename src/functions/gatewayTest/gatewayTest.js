@@ -1,6 +1,6 @@
 'use strict';
 
-var m = require('./messages.js');
+const gll = require('git-lfs-lambda-common');
 
 //const doc = require('dynamodb-doc');
 //const dynamo = new doc.DynamoDB();
@@ -17,20 +17,10 @@ var m = require('./messages.js');
 * DynamoDB API as a JSON body.
 */
 
-function lambdaResponse(code, bodyObj) {
-    return {
-        statusCode: code,
-        headers: {
-            'content-type': 'application/json',
-        },
-        body: JSON.stringify(bodyObj)
-    };
-}
-
 exports.handler = function(event, context, callback) {
     //console.log('Received event:', JSON.stringify(event, null, 2));
     var res = {
-        message: m.testResponse
+        message: m.testResponse + " and more!"
     };
-    callback(null, lambdaResponse(200, res));
+    callback(null, respond(200, res));
 };
