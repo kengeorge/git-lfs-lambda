@@ -25,6 +25,14 @@ function forEach(callFunc) {
     }
 }
 
+function qify(items){
+    return Q.all(items.map(function(item){
+        return Q.fcall(function() {
+            return item;
+        })
+    }));
+}
+
 function projectRoot() {
     //TODO
     return process.cwd();
@@ -74,6 +82,7 @@ module.exports = {
     },
     configuredAWS: AWS,
     projectConfig: projectConfig,
-    forEach: forEach
+    forEach: forEach,
+    qify: qify
 };
 

@@ -10,7 +10,8 @@ const paths = gll.paths;
 const projectConfig = gll.projectConfig;
 
 exports.deploy = function(functionName) {
-    return zip(functionName)
+    return verify(functionName)
+        .then(zip)
         .then(readZipBits)
         .then(function (zipData) {
             return checkForExisting(functionName)
@@ -23,13 +24,28 @@ exports.deploy = function(functionName) {
 }
 
 exports.remove = function(functionName) {
-    return lambda.deleteFunction({FunctionName: functionName}).promise();
+    return verify(functionName)
+        .catch(function(err) {
+            throw new Error(format("%s does not appear to be managed by gll, skipping.", functionName));
+        })
+        .then(function(name) {
+            return lambda.deleteFunction({FunctionName: name}).promise();
+        });
+}
+
+function verify(functionName) {
+    var deferred = Q.defer();
+    fs.access(paths.sourceRootFor(functionName), function(err) {
+        if(err) deferred.reject(new Error(err));
+        else deferred.resolve(functionName);
+    })
+    return deferred.promise;
 }
 
 function zip(functionName) {
     var deferred = Q.defer();
 
-    log("Zipping %s", functionName);
+
     var outfilePath = paths.deploymentPackageFor(functionName);
     var functionDir = paths.sourceRootFor(functionName);
 

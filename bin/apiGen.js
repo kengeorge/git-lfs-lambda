@@ -8,16 +8,28 @@ const pretty = gll.pretty;
 const paths = gll.paths;
 const format = require('util').format;
 const forEach = gll.forEach;
+const qify = gll.qify;
 
 var args = process.argv.slice(2);
 var command = args.shift().toLowerCase();
 
 switch(command) {
     case "clean":
-        cleanFunctions();
+        getList(args)
+            .then(forEach(clean))
+            .then(function(results) {
+                log("Clean results:\n%s", pretty(results));
+            })
+            .done();
+
         break;
     case "deploy":
-        deployFunctions();
+        getList(args)
+            .then(forEach(deploy))
+            .then(function (results) {
+                log("Deployment results: %s", pretty(results));
+            })
+            .done();
         break;
     default:
         log("Uknown operation %s", command);
@@ -25,25 +37,13 @@ switch(command) {
         break;
 }
 
-function cleanFunctions() {
-    readDirs()
-        .then(forEach(clean))
-        .then(function(results) {
-            log("Clean results:\n%s", pretty(results));
-        })
-        .done();
-}
-
-function deployFunctions() {
-    readDirs()
-        .then(forEach(deploy))
-        .then(forEach(function (result) {
-            return format("Function [%s] deployed as [%s]", result.FunctionName, result.FunctionArn);
-        }))
-        .then(function (results) {
-            log("Deployment results: %s", pretty(results));
-        })
-        .done();
+function getList(args) {
+    if (args && args.length > 0) {
+        return Q.fcall(function () {
+            return args;
+        });
+    };
+    return readDirs();
 }
 
 function readDirs(){
@@ -67,6 +67,9 @@ function clean(functionName) {
 
 function deploy(functionName) {
     return lambda.deploy(functionName)
+        .then(function(result){
+            return format("Function [%s] deployed as [%s]", result.FunctionName, result.FunctionArn);
+        })
         .catch(function (err) {
             return format("Could not deploy function %s: [%s]", functionName, err);
         });
