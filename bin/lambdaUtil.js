@@ -1,11 +1,13 @@
 const archiver = require('archiver');
 const fs = require('fs');
 const Q = require('Q');
+const format = require('util').format;
 
 const gll = require("./base.js");
 const log = gll.log;
 const lambda = new gll.configuredAWS.Lambda();
 const paths = gll.paths;
+const projectConfig = gll.projectConfig;
 
 exports.deploy = function(functionName) {
     return zip(functionName)

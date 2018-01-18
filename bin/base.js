@@ -12,8 +12,8 @@ function log() {
     console.log(formatted);
 }
 
-function print(data) {
-    log(JSON.stringify(data, null, 2));
+function pretty(data) {
+    return JSON.stringify(data, null, 2);
 }
 
 function projectRoot() {
@@ -45,7 +45,7 @@ function commonRoot() {
 
 module.exports = {
     log: log,
-    print: print,
+    pretty: pretty,
     paths: {
         projectRoot: projectRoot,
         deploymentPackageFor: deploymentPackageFor,

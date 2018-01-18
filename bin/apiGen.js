@@ -1,6 +1,7 @@
 const lambda = require('./lambdaUtil.js');
 const gll = require('./base.js');
 const log = gll.log;
+const pretty = gll.pretty;
 
 /**
  * Targets:
@@ -27,23 +28,59 @@ var schema = {
     }
 };
 
-var args = process.argv.slice(2);
-var command = args[0];
-if(command == "clean") {
-    var rest =args.slice(1);
-    console.log(rest);
-    for(var i in rest) {
-        var name = rest[i];
-        lambda.remove(name)
-            .then(function (response) {
-                log("Function removed: %s", response);
+var apis = ["batch", "locks"];
 
-            })
-            .catch(function (err) {
-                log("Could not remove function %s: %s", name, err);
-            })
-            .done();
+var args = process.argv.slice(2);
+
+var command = args.shift().toLowerCase();
+
+switch(command) {
+    case "clean":
+        cleanFunctions(apis);
+        break;
+    case "deploy":
+        deployFunctions(apis);
+        break;
+    default:
+        log("Uknown operation %s", command);
+        process.exit(1);
+        break;
+}
+
+function cleanFunctions(functionNames) {
+    log("Removing functions %s", functionNames);
+    for(var i in functionNames) {
+        var name = functionNames[i];
+        clean(name);
     }
 }
 
+function clean(functionName) {
+    lambda.remove(functionName)
+        .then(function (response) {
+            log("Function [%s] removed: %s", functionName, pretty(response));
 
+        })
+        .catch(function (err) {
+            log("Could not remove function %s: %s", functionName, err);
+        })
+        .done();
+}
+
+function deployFunctions(functionNames) {
+    for(var i in functionNames) {
+        var name = functionNames[i];
+        deploy(name);
+    }
+}
+
+function deploy(functionName) {
+    lambda.deploy(functionName)
+        .then(function (response) {
+            log("Function [%s] deployed: %s", functionName, pretty(response));
+        })
+        .catch(function (err) {
+            log("Could not deploy function %s:  %s", functionName, err);
+        })
+        .done();
+}
