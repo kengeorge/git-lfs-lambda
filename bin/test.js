@@ -2,6 +2,8 @@
 
 const path = require('path');
 const format = require('util').format;
+const Q = require('Q');
+const request = require('request');
 
 const gll = require("./base.js");
 const projectConfig = gll.projectConfig;
@@ -9,6 +11,7 @@ const functionPath = gll.paths.sourceRootFor;
 const log = gll.log;
 const pretty = gll.pretty;
 
+const apiEndpoint="https://2m7yx9xvpe.execute-api.us-west-2.amazonaws.com/git_lfs_lambda_test";
 var args = process.argv.slice(2);
 
 var method = args.shift();
@@ -38,7 +41,14 @@ switch(testTarget) {
         process.exit(0);
         break;
     case 'remote':
-        throw new Error("Not implemented (i.e. I broke it)");
+        call()
+            .then(function(response) {
+                log(pretty(response));
+            })
+            .catch(function(err){
+                log("Call failed: %s", err);
+            })
+            .done();
         break;
     default:
         console.log(format('Unknown test argument [%s]', testTarget));
@@ -50,17 +60,22 @@ switch(testTarget) {
 //=====
 function call(){
     var deferred = Q.defer();
+    var url = format("%s/myrepo.git/info/lfs/locks", apiEndpoint);
+    var payload = {
+        "path": "foo/bar.zip",
+        "ref": {
+            "name": "refs/heads/my-feature"
+        }
+    };
     var params = {
-        uri: targetInfo.url,
+        uri: url,
         method: "POST",
         headers: {
             "content-type": "application/json",
             "x-amz-docs-region": projectConfig.awsRegion
         },
         json: true,
-        body: {
-            garbage: "helloooo"
-        }
+        body: payload,
     };
     request(params, function(err, response, body) {
         if(err) deferred.reject(new Error(err));

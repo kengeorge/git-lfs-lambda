@@ -12,10 +12,37 @@
 
 'use strict';
 
-exports.handler = function(body, context, callback) {
-    var err = {
-        sc: 501,
-        m: "huh"
+function gitLfsError(message, documentationUrl, requestId){
+    return {
+        message: message,
+        documentation_url: documentationUrl,
+        request_id: requestId
     };
+}
+
+function createLockResponse(){
+    return {
+        locks: [
+            {
+                id: "some uuid",
+                path: "repo/file/path",
+                locked_at: "2016-05-17T15:49:06+00:00",
+                owner: {
+                    name: "Ken George"
+                }
+            }
+        ]
+        ,
+        next_cursor: "opt NEXT id"
+    };
+}
+
+exports.handler = function(body, context, callback) {
+    var err = gitLfsError(
+        "Not implemented yet.",
+        "No doc url found",
+        0
+    );
+
     callback(err);
 };
