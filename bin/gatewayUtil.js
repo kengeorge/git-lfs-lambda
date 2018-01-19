@@ -22,6 +22,13 @@ var name = args.shift();
 
 
 exports.deploy = function(apiName) {
+    const apiData = {
+        apiTimestamp: new Date().toISOString(),
+        apiName: apiName,
+        stage: "development",
+        hostname: "localhost",
+        repoName: projectConfig.repoName,
+    };
     return readTemplate("api")
         .then(qCall(replace, apiData))
         .then(qCall(uploadApi))
@@ -34,14 +41,6 @@ exports.remove = function(apiName){
             return gateway.deleteRestApi({restApiId: api.id}).promise();
         })
     ;
-};
-
-const apiData = {
-    apiTimestamp: new Date().toISOString(),
-    apiName: "git-lfs-lambda-AUTO",
-    stage: "development",
-    hostname: "localhost",
-    repoName: projectConfig.repoName,
 };
 
 function getApi(apiName){
