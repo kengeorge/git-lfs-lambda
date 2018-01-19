@@ -37,7 +37,47 @@ function remove(functionName) {
 };
 
 function verify(functionName) {
-    return Q.nfcall(fs.access, paths.sourceRootFor(functionName));
+    var deferred = Q.defer();
+    fs.access(paths.sourceRootFor(functionName), function(err) {
+        if(err) deferred.reject(new Error(err));
+        else deferred.resolve(functionName)
+    });
+    return deferred.promise;
+}
+
+function addPermissionRun(apiName) {
+    gateway.getApi(apiName)
+        .then(peek)
+        .then(read('id'))
+        .then(addInvokePermission)
+        .catch(function (err) {
+            log("Could not add permission: %s", err);
+        })
+        .then(function (whatever) {
+            return getPolicy(functionName);
+        })
+        .then(peek)
+        .done()
+    ;
+}
+
+function addInvokePermission(apiId) {
+    var arn = makeGatewayArn(
+        gll.projectConfig.awsRegion,
+        "548425624042",
+        apiId,
+        "POST",
+        "myrepo.git/info/lfs/locks"
+    );
+    var params = {
+        Action: "lambda:InvokeFunction",
+        FunctionName: functionName,
+        Principal: "apigateway.amazonaws.com",
+        StatementId: makeStatementId(),
+        SourceArn: arn
+    };
+    return lambda.addPermission(params).promise()
+        .then(qCall(JSON.Parse));
 }
 
 function zip(functionName) {
