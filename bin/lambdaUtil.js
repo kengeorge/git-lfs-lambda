@@ -9,7 +9,10 @@ const lambda = new gll.configuredAWS.Lambda();
 const paths = gll.paths;
 const projectConfig = gll.projectConfig;
 
-exports.deploy = function(functionName) {
+exports.deploy = deploy;
+exports.remove = remove;
+
+function deploy(functionName) {
     return verify(functionName)
         .then(zip)
         .then(readZipBits)
@@ -23,7 +26,7 @@ exports.deploy = function(functionName) {
         });
 };
 
-exports.remove = function(functionName) {
+function remove(functionName) {
     return verify(functionName)
         .catch(function(err) {
             throw new Error(format("%s does not appear to be managed by gll, skipping.", functionName));
@@ -34,12 +37,7 @@ exports.remove = function(functionName) {
 };
 
 function verify(functionName) {
-    var deferred = Q.defer();
-    fs.access(paths.sourceRootFor(functionName), function(err) {
-        if(err) deferred.reject(new Error(err));
-        else deferred.resolve(functionName);
-    });
-    return deferred.promise;
+    return Q.nfcall(fs.access, paths.sourceRootFor(functionName));
 }
 
 function zip(functionName) {

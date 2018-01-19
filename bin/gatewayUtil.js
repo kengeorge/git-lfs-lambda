@@ -1,27 +1,40 @@
 const Q = require('Q');
+Q.longStackSupport = true;
 const fs = require('fs');
+const format = require('util').format;
 
 const gll = require('./base.js');
 const projectConfig = gll.projectConfig;
-const templateText = gll.templateText;
-const log = gll.log;
-const pretty = gll.pretty;
-const paths = gll.paths;
-const format = require('util').format;
-const forEach = gll.forEach;
-const qify = gll.qify;
 const qCall = gll.qCall;
 const gateway = new gll.configuredAWS.APIGateway();
 
+exports.getResources = getResources;
+exports.deploy = deploy;
+exports.getApi = getApi;
+exports.remove = remove;
+exports.generateSpec = generateSpec;
+exports.getApiSpec = getApiSpec;
 
-var args = process.argv.slice(2);
-var command = args.shift();
-if(command) command = command.toLowerCase();
+function getResources(apiName) {
+    return getApi(apiName)
+        .then(function(api) {
+            var params = {
+                restApiId: api.id,
+                embed: ["methods"],
+            }
+            return gateway.getResources(params).promise();
+        })
+        .then(read('items'))
+    ;
+}
 
-var name = args.shift();
+function deploy(apiName) {
+    return generateSpec(apiName)
+        .then(qCall(uploadApi))
+    ;
+};
 
-
-exports.deploy = function(apiName) {
+function generateSpec(apiName){
     const apiData = {
         apiTimestamp: new Date().toISOString(),
         apiName: apiName,
@@ -31,21 +44,32 @@ exports.deploy = function(apiName) {
     };
     return readTemplate("api")
         .then(qCall(replace, apiData))
-        .then(qCall(uploadApi))
-    ;
+        .then(qCall(JSON.parse))
 };
 
-exports.remove = function(apiName){
+function getApiSpec(apiName) {
     return getApi(apiName)
         .then(function(api) {
-            return gateway.deleteRestApi({restApiId: api.id}).promise();
+            var params = {
+                restApiId: api.id,
+                exportType: "swagger",
+                stageName: "development",
+                accepts: "application/json",
+                parameters: {
+                    extensions: "integrations"
+                }
+            }
+            return gateway.getExport(params).promise();
+        })
+        .then(function(results){
+            return JSON.parse(results.body);
         })
     ;
 };
 
-function getApi(apiName){
-    return gateway.getRestApis({})
-        .promise()
+//TODO this currently always operates on the first matching API (though many may exist)
+function getApi(apiName) {
+    return gateway.getRestApis({}).promise()
         .then(function(response){
             for(var i in response.items){
                 var api = response.items[i];
@@ -54,7 +78,15 @@ function getApi(apiName){
             throw new Error(format("No api found by the name of %s", apiName));
         })
     ;
-}
+};
+
+function remove(apiName){
+    return getApi(apiName)
+        .then(function(api) {
+            return gateway.deleteRestApi({restApiId: api.id}).promise();
+        })
+    ;
+};
 
 function uploadApi(apiText) {
     var params = {
@@ -65,10 +97,6 @@ function uploadApi(apiText) {
         }
     };
     return gateway.importRestApi(params).promise();
-}
-
-function toObject(text){
-    return JSON.parse(text);
 }
 
 function readTemplate(type) {

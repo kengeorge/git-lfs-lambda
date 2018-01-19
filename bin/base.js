@@ -5,7 +5,7 @@ const path = require('path');
 const Q = require('Q');
 
 const projectConfig = JSON.parse(fs.readFileSync("config.json"));
-AWS.config.region = projectConfig.awsRegion;
+AWS.config.update({region: projectConfig.awsRegion});
 AWS.config.setPromisesDependency(require('Q').Promise);
 
 function log() {
@@ -14,7 +14,8 @@ function log() {
 }
 
 function pretty(data) {
-    return JSON.stringify(data, null, 2);
+    if(typeof data === 'object') return JSON.stringify(data, null, 2);
+    return data;
 }
 
 //Helper to generate a promise function that executes the given function
@@ -26,6 +27,35 @@ function forEach(callFunc) {
         }));
     }
 }
+
+function read(fieldName) {
+    return function(input) {
+        return Q.fcall(function() {
+            return input[fieldName];
+        });
+    }
+}
+
+function peek(input) {
+    return Q.fcall(function() {
+        log(pretty(input));
+        return input;
+    });
+}
+
+function filter(filterFunc) {
+    return function(input) {
+        return Q.fcall(function(){
+            var ret = [];
+            for(var k in input){
+                var item = input[k];
+                if(filterFunc(item)) ret.push(item);
+            }
+            return ret;
+        })
+    }
+}
+
 
 //Helper to wrap all items in a collection in a promise call.
 function qify(items){
@@ -99,6 +129,9 @@ module.exports = {
     projectConfig: projectConfig,
     forEach: forEach,
     qify: qify,
-    qCall: qCall
+    qCall: qCall,
+    read: read,
+    peek: peek,
+    filter: filter
 };
 

@@ -9,57 +9,229 @@ const pretty = gll.pretty;
 const paths = gll.paths;
 const format = require('util').format;
 const forEach = gll.forEach;
+const qCall = gll.qCall;
+const read = gll.read;
+const peek = gll.peek;
+const filter = gll.filter;
+
+
+//TODO temp for testing/dev
+const L = new gll.configuredAWS.Lambda();
+const G = new gll.configuredAWS.APIGateway();
 
 var args = process.argv.slice(2);
-var command = args.shift().toLowerCase();
-var type = args.shift().toLowerCase();
-var action = format("%s-%s", command, type);
 
-log(action);
-switch(action) {
-    case "clean-functions":
-        getList(args)
-            .then(forEach(cleanFunction))
-            .then(function(results) {
-                log("Function removal results:\n%s", pretty(results));
-            })
-            .done();
+function getPolicy(functionName) {
+    return L.getPolicy({FunctionName: functionName}).promise()
+        .then(function (response) {
+            return JSON.parse(response.Policy);
+        })
+        ;
+}
 
-        break;
+function test(apiName, resourcePath, method, payload){
+    return gateway.getApi(apiName)
+        .then(read('id'))
+        .then(function(apiId){
+            return G.getResources({restApiId: apiId}).promise()
+                .then(read('items'))
+                .then(filter(function(item) { return item.path == resourcePath;}))
+                .then(read('0'))
+                .then(read('id'))
+                .then(function(resource) {
+                    return testInvoke(apiId, resource, method, payload);
+                })
+                .then(read('body'))
+                .then(qCall(JSON.parse))
+            ;
+        })
+    ;
+}
+
+function testInvoke(apiId, resourceId, method, payload) {
+    var params = {
+        restApiId: apiId,
+        resourceId: resourceId,
+        httpMethod: method,
+        body: JSON.stringify(payload),
+        headers: {
+        },
+        stageVariables: {
+        }
+    };
+    return G.testInvokeMethod(params).promise();
+}
+
+function addInvokePermission(apiId) {
+    var arn = makeGatewayArn(
+        gll.projectConfig.awsRegion,
+        "548425624042",
+        apiId,
+        "POST",
+        "myrepo.git/info/lfs/locks"
+    );
+    var params = {
+        Action: "lambda:InvokeFunction",
+        FunctionName: functionName,
+        Principal: "apigateway.amazonaws.com",
+        StatementId: makeStatementId(),
+        SourceArn: arn
+    };
+    return L.addPermission(params).promise()
+        .then(qCall(JSON.Parse))
+    ;
+}
+
+function makeGatewayArn(awsRegion, accountId, apiId, methodType, resourcePath){
+    return format("arn:aws:execute-api:%s:%s:%s/*/%s/%s",
+        awsRegion, accountId, apiId, methodType, resourcePath);
+}
+
+function makeStatementId() {
+    return "git-lfs-lambda-permissions-test";
+}
 
 
-    case "deploy-functions":
-        getList(args)
-            .then(forEach(deployFunction))
-            .then(function (results) {
-                log("Function deployment results: %s", pretty(results));
-            })
-            .done();
-        break;
+function getEventSourceMappings(functionName){
+    var params = {
+        FunctionName: functionName
+    };
+    return L.listEventSourceMappings(params).promise();
+}
+
+var apiName = args[0];
+var resourcePath = args[1];
+var methodType = "POST";
+var payload = {
+    path: "foo/bar.zip",
+    ref: {
+        name: "refs/heads/my-feature"
+    }
+}
+
+test(apiName, resourcePath, methodType, payload)
+    .then(peek)
+.done();
+
+/*
+THIS IS FUNCTIONAL; MOVE TO PROPER HOME
+gateway.getApi(apiName)
+    .then(peek)
+    .then(read('id'))
+    .then(addInvokePermission)
+    .catch(function(err){
+        log("Could not add permission: %s", err);
+    })
+    .then(function(whatever) {
+        return getPolicy(functionName);
+    })
+    .then(peek)
+    .done()
+;
+*/
+
+function getMethod(method, resourceId, apiId) {
+    var params = {
+        httpMethod: method,
+        resourceId: resourceId,
+        restApiId: apiId,
+    };
+    return G.getMethod(params).promise();
+}
+
+function ugh() {
+    gateway.getApi(apiName)
+        .then(function (api) {
+            return gateway.getResources(apiName)
+                .then(function (resources) {
+                    for (var k in resources) {
+                        var res = resources[k];
+                        if (res.path == "/myrepo.git/info/lfs/locks") {
+                            return res;
+                        }
+                    }
+                    throw new Error("Can't find path /myrepo.git/info/lfs/locks");
+                })
+                .then(function (resource) {
+                    return getMethod(methodType, resource.id, api.id);
+                })
+                .then(function (resource) {
+                    log(pretty(resource));
+                });
+        })
+        .done()
+    ;
+}
+
+if(false) {
+    var command = args.shift();
+    if(command) command = command.toLowerCase();
+    var type = args.shift();
+    if(type) type = type.toLowerCase();
+    var action = format("%s-%s", command, type);
+
+    switch (action) {
+        case "clean-functions":
+            getList(args)
+                .then(forEach(cleanFunction))
+                .then(function (results) {
+                    log("Function removal results:\n%s", pretty(results));
+                })
+                .done();
+
+            break;
 
 
-    case "clean-apis":
-        cleanApi(args[0])
-            .then(function (results) {
-                log("Api removal results: %s", pretty(results));
-            })
-            .done();
-        break;
+        case "deploy-functions":
+            getList(args)
+                .then(forEach(deployFunction))
+                .then(function (results) {
+                    log("Function deployment results: %s", pretty(results));
+                })
+                .done();
+            break;
 
 
-    case "deploy-apis":
-        deployApi(args[0])
-            .then(function (results) {
-                log("Api deployment results: %s", pretty(results));
-            })
-            .done();
-        break;
+        case "clean-api":
+            cleanApi(args[0])
+                .then(function (results) {
+                    log("Api removal results: %s", pretty(results));
+                })
+                .done();
+            break;
 
 
-    default:
-        log("Uknown operation %s", action);
-        process.exit(1);
-        break;
+        case "deploy-api":
+            deployApi(args[0])
+                .then(function (results) {
+                    log("Api deployment results: %s", pretty(results));
+                })
+                .done();
+            break;
+
+        case "read-api":
+            gateway.getApiSpec(args[0])
+                .then(function (spec) {
+                    log(pretty(spec));
+                })
+                .done()
+            ;
+            break;
+
+        case "generate-api":
+            gateway.generateSpec(args[0])
+                .then(function (r) {
+                    log(pretty(r));
+                })
+                .done()
+            ;
+            break;
+
+        default:
+            log("Unknown operation %s", action);
+            process.exit(1);
+            break;
+    }
 }
 
 function getList(args) {
