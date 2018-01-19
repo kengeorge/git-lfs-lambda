@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "version": "${apiTimestamp}",
-    "title": "git-lfs-lambda"
+    "title": "${apiName}"
   },
   "host": "${hostname}",
   "basePath": "/${stage}",
@@ -10,7 +10,7 @@
     "https"
   ],
   "paths": {
-    "/myrepo.git/info/lfs/locks": {
+    "/${repoName}.git/info/lfs/locks": {
       "post": {
         "produces": [
           "application/json"

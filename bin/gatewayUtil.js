@@ -1,6 +1,5 @@
 const Q = require('Q');
 const fs = require('fs');
-const lambda = require('./lambdaUtil.js');
 
 const gll = require('./base.js');
 const projectConfig = gll.projectConfig;
@@ -11,32 +10,93 @@ const paths = gll.paths;
 const format = require('util').format;
 const forEach = gll.forEach;
 const qify = gll.qify;
+const qCall = gll.qCall;
+const gateway = new gll.configuredAWS.APIGateway();
+
 
 var args = process.argv.slice(2);
-var command = args.shift().toLowerCase();
+var command = args.shift();
+if(command) command = command.toLowerCase();
 
-switch(command) {
-    case "parse":
-        Parse();
-        break;
-    default:
-        log("Unknown command: %s", command);
-        process.exit(1);
-        break;
+var name = args.shift();
+
+
+exports.deploy = function(apiName) {
+    return readTemplate("api")
+        .then(qCall(replace, apiData))
+        .then(qCall(uploadApi))
+    ;
+};
+
+exports.remove = function(apiName){
+    return getApi(apiName)
+        .then(function(api) {
+            return gateway.deleteRestApi({restApiId: api.id}).promise();
+        })
+    ;
+};
+
+const apiData = {
+    apiTimestamp: new Date().toISOString(),
+    apiName: "git-lfs-lambda-AUTO",
+    stage: "development",
+    hostname: "localhost",
+    repoName: projectConfig.repoName,
+};
+
+function getApi(apiName){
+    return gateway.getRestApis({})
+        .promise()
+        .then(function(response){
+            for(var i in response.items){
+                var api = response.items[i];
+                if(api.name == apiName) return api;
+            }
+            throw new Error(format("No api found by the name of %s", apiName));
+        })
+    ;
 }
 
-function readTemplate() {
+function uploadApi(apiText) {
+    var params = {
+        body: Buffer.from(apiText),
+        failOnWarnings: true,
+        parameters: {
+            endpointConfigurationTypes: "REGIONAL",
+        }
+    };
+    return gateway.importRestApi(params).promise();
+}
+
+function toObject(text){
+    return JSON.parse(text);
+}
+
+function readTemplate(type) {
     var deferred = Q.defer();
-    fs.readFile("./template.json", "utf-8", function(err, data){
+    fs.readFile("./"+type+"_template.json", "utf-8", function(err, data){
         if(err) deferred.reject(new Error(err));
         else deferred.resolve(data);
     });
     return deferred.promise;
 }
 
-function Parse() {
-    return readTemplate()
-        .then(function(data){
-            log(data);
-        });
+function replace(text, placeholderData) {
+    for(var key in placeholderData) {
+        var data = placeholderData[key];
+        var token = format("${%s}", key);
+        text = text.replace(token, data);
+    }
+    var remaining = text.match(/\$\{(\w+)\}/);
+    if(!remaining) return text;
+    throw new Error(format("Unreplaced token: [%s]", remaining[0]));
+}
+
+function fillData(text, placeholderData) {
+    return JSON.parse(text, function(key, value) {
+        if(typeof value !== 'string') return value;
+        var match = value.match(placeholderPattern);
+        if(!match) return value;
+        return placeholderData[match[1]];
+    });
 }

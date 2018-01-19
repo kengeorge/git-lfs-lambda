@@ -17,20 +17,35 @@ function pretty(data) {
     return JSON.stringify(data, null, 2);
 }
 
+//Helper to generate a promise function that executes the given function
+//  over all items passed in to it.
 function forEach(callFunc) {
     return function (input) {
-        return Q.all(input.map(function (item) {
+        return Q.all(Array.from(input).map(function (item) {
             return callFunc(item);
         }));
     }
 }
 
+//Helper to wrap all items in a collection in a promise call.
 function qify(items){
     return Q.all(items.map(function(item){
         return Q.fcall(function() {
             return item;
         })
     }));
+}
+
+//Helper for turning a regular function into a promise call for chaining
+function qCall(){
+    var varArgs = Array.from(arguments);
+    return function() {
+        var func = varArgs.shift();
+        var theseArgs = Array.from(arguments);
+        var all = theseArgs.concat(varArgs);
+        all.unshift(func);
+        return Q.fcall.apply(this, all);
+    };
 }
 
 function projectRoot() {
@@ -83,6 +98,7 @@ module.exports = {
     configuredAWS: AWS,
     projectConfig: projectConfig,
     forEach: forEach,
-    qify: qify
+    qify: qify,
+    qCall: qCall
 };
 

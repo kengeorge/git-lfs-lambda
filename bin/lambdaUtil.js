@@ -21,7 +21,7 @@ exports.deploy = function(functionName) {
                         : createNewFunction(zipData, functionName);
                 })
         });
-}
+};
 
 exports.remove = function(functionName) {
     return verify(functionName)
@@ -31,14 +31,14 @@ exports.remove = function(functionName) {
         .then(function(name) {
             return lambda.deleteFunction({FunctionName: name}).promise();
         });
-}
+};
 
 function verify(functionName) {
     var deferred = Q.defer();
     fs.access(paths.sourceRootFor(functionName), function(err) {
         if(err) deferred.reject(new Error(err));
         else deferred.resolve(functionName);
-    })
+    });
     return deferred.promise;
 }
 
