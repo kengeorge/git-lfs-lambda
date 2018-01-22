@@ -1,35 +1,510 @@
 {
   "swagger": "2.0",
   "info": {
-    "version": "${apiTimestamp}",
+    "version": "2018-01-22T02:36:05Z",
     "title": "${apiName}"
   },
-  "host": "${hostname}",
+  "host": "hd7jbvcc42.execute-api.${awsRegion}.amazonaws.com",
   "basePath": "/${stage}",
   "schemes": [
     "https"
   ],
   "paths": {
     "/${repoName}.git/info/lfs/locks": {
-      "post": {
+      "get": {
         "produces": [
           "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "Accept",
+            "in": "header",
+            "required": true,
+            "type": "string"
+          }
         ],
         "responses": {
           "200": {
             "description": "200 response",
             "schema": {
-              "$ref": "#/definitions/Empty"
+              "$ref": "#/definitions/gitLfsLockListResponse"
+            },
+            "headers": {
+              "Content-Type": {
+                "type": "string"
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "schema": {
+              "$ref": "#/definitions/gitLfsGenericErrorResponse"
+            },
+            "headers": {
+              "Content-Type": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "500 response",
+            "schema": {
+              "$ref": "#/definitions/gitLfsGenericErrorResponse"
+            },
+            "headers": {
+              "Content-Type": {
+                "type": "string"
+              }
             }
           }
         },
         "x-amazon-apigateway-integration": {
           "responses": {
             "default": {
-              "statusCode": "200"
+              "statusCode": "200",
+              "responseParameters": {
+                "method.response.header.Content-Type": "'application/vnd.git-lfs+json'"
+              }
             }
           },
-          "uri": "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:548425624042:function:createLock/invocations",
+          "uri": "arn:aws:apigateway:${awsRegion}:lambda:path/2015-03-31/functions/arn:aws:lambda:${awsRegion}:${accountNumber}:function:listLocks/invocations",
+          "passthroughBehavior": "when_no_match",
+          "httpMethod": "POST",
+          "contentHandling": "CONVERT_TO_TEXT",
+          "type": "aws"
+        }
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "Accept",
+            "in": "header",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "gitLfsLockCreationRequest",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gitLfsLockCreationRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "201 response",
+            "schema": {
+              "$ref": "#/definitions/gitLfsLockCreationResponse"
+            },
+            "headers": {
+              "Content-Type": {
+                "type": "string"
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "schema": {
+              "$ref": "#/definitions/gitLfsGenericErrorResponse"
+            },
+            "headers": {
+              "Content-Type": {
+                "type": "string"
+              }
+            }
+          },
+          "409": {
+            "description": "409 response",
+            "schema": {
+              "$ref": "#/definitions/gitLfsLockCreationConflictReponse"
+            },
+            "headers": {
+              "Content-Type": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "500 response",
+            "schema": {
+              "$ref": "#/definitions/gitLfsGenericErrorResponse"
+            },
+            "headers": {
+              "Content-Type": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "responses": {
+            "default": {
+              "statusCode": "201",
+              "responseParameters": {
+                "method.response.header.Content-Type": "'application/vnd.git-lfs+json'"
+              }
+            }
+          },
+          "uri": "arn:aws:apigateway:${awsRegion}:lambda:path/2015-03-31/functions/arn:aws:lambda:${awsRegion}:${accountNumber}:function:createLock/invocations",
+          "passthroughBehavior": "when_no_match",
+          "httpMethod": "POST",
+          "contentHandling": "CONVERT_TO_TEXT",
+          "type": "aws"
+        }
+      }
+    },
+    "/myrepo.git/info/lfs/locks/verify": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "Accept",
+            "in": "header",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "gitLfsLockVerificationRequest",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gitLfsLockVerificationRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "schema": {
+              "$ref": "#/definitions/gitLfsLockVerificationResponse"
+            },
+            "headers": {
+              "Content-Type": {
+                "type": "string"
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "schema": {
+              "$ref": "#/definitions/gitLfsGenericErrorResponse"
+            },
+            "headers": {
+              "Content-Type": {
+                "type": "string"
+              }
+            }
+          },
+          "404": {
+            "description": "404 response",
+            "schema": {
+              "$ref": "#/definitions/gitLfsGenericErrorResponse"
+            },
+            "headers": {
+              "Content-Type": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "500 response",
+            "schema": {
+              "$ref": "#/definitions/gitLfsGenericErrorResponse"
+            },
+            "headers": {
+              "Content-Type": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "responses": {
+            "default": {
+              "statusCode": "200",
+              "responseParameters": {
+                "method.response.header.Content-Type": "'application/vnd.git-lfs+json'"
+              }
+            }
+          },
+          "uri": "arn:aws:apigateway:${awsRegion}:lambda:path/2015-03-31/functions/arn:aws:lambda:${awsRegion}:${accountNumber}:function:verifyLocks/invocations",
+          "passthroughBehavior": "when_no_match",
+          "httpMethod": "POST",
+          "contentHandling": "CONVERT_TO_TEXT",
+          "type": "aws"
+        }
+      }
+    },
+    "/myrepo.git/info/lfs/locks/{id}/unlock": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "Accept",
+            "in": "header",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "gitLfsLockDeletionRequest",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gitLfsLockDeletionRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "schema": {
+              "$ref": "#/definitions/gitLfsLockCreationResponse"
+            },
+            "headers": {
+              "Content-Type": {
+                "type": "string"
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "schema": {
+              "$ref": "#/definitions/gitLfsGenericErrorResponse"
+            },
+            "headers": {
+              "Content-Type": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "500 response",
+            "schema": {
+              "$ref": "#/definitions/gitLfsGenericErrorResponse"
+            },
+            "headers": {
+              "Content-Type": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "responses": {
+            "default": {
+              "statusCode": "200",
+              "responseParameters": {
+                "method.response.header.Content-Type": "'application/vnd.git-lfs+json'"
+              }
+            }
+          },
+          "uri": "arn:aws:apigateway:${awsRegion}:lambda:path/2015-03-31/functions/arn:aws:lambda:${awsRegion}:${accountNumber}:function:deleteLock/invocations",
+          "passthroughBehavior": "when_no_match",
+          "httpMethod": "POST",
+          "contentHandling": "CONVERT_TO_TEXT",
+          "type": "aws"
+        }
+      }
+    },
+    "/myrepo.git/info/lfs/objects/batch": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "Accept",
+            "in": "header",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "gitLfsBatchRequest",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gitLfsBatchRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "schema": {
+              "$ref": "#/definitions/gitLfsBatchResponse"
+            },
+            "headers": {
+              "Content-Type": {
+                "type": "string"
+              }
+            }
+          },
+          "401": {
+            "description": "401 response",
+            "schema": {
+              "$ref": "#/definitions/gitLfsGenericErrorResponse"
+            },
+            "headers": {
+              "Content-Type": {
+                "type": "string"
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "schema": {
+              "$ref": "#/definitions/gitLfsGenericErrorResponse"
+            },
+            "headers": {
+              "Content-Type": {
+                "type": "string"
+              }
+            }
+          },
+          "404": {
+            "description": "404 response",
+            "schema": {
+              "$ref": "#/definitions/gitLfsGenericErrorResponse"
+            },
+            "headers": {
+              "Content-Type": {
+                "type": "string"
+              }
+            }
+          },
+          "406": {
+            "description": "406 response",
+            "schema": {
+              "$ref": "#/definitions/gitLfsGenericErrorResponse"
+            },
+            "headers": {
+              "Content-Type": {
+                "type": "string"
+              }
+            }
+          },
+          "422": {
+            "description": "422 response",
+            "schema": {
+              "$ref": "#/definitions/gitLfsGenericErrorResponse"
+            },
+            "headers": {
+              "Content-Type": {
+                "type": "string"
+              }
+            }
+          },
+          "429": {
+            "description": "429 response",
+            "schema": {
+              "$ref": "#/definitions/gitLfsGenericErrorResponse"
+            },
+            "headers": {
+              "Content-Type": {
+                "type": "string"
+              }
+            }
+          },
+          "501": {
+            "description": "501 response",
+            "schema": {
+              "$ref": "#/definitions/gitLfsGenericErrorResponse"
+            },
+            "headers": {
+              "Content-Type": {
+                "type": "string"
+              }
+            }
+          },
+          "507": {
+            "description": "507 response",
+            "schema": {
+              "$ref": "#/definitions/gitLfsGenericErrorResponse"
+            },
+            "headers": {
+              "Content-Type": {
+                "type": "string"
+              }
+            }
+          },
+          "509": {
+            "description": "509 response",
+            "schema": {
+              "$ref": "#/definitions/gitLfsGenericErrorResponse"
+            },
+            "headers": {
+              "Content-Type": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "responses": {
+            "default": {
+              "statusCode": "200",
+              "responseParameters": {
+                "method.response.header.Content-Type": "'application/vnd.git-lfs+json'"
+              }
+            }
+          },
+          "uri": "arn:aws:apigateway:${awsRegion}:lambda:path/2015-03-31/functions/arn:aws:lambda:${awsRegion}:${accountNumber}:function:batch/invocations",
           "passthroughBehavior": "when_no_match",
           "httpMethod": "POST",
           "contentHandling": "CONVERT_TO_TEXT",
@@ -39,9 +514,393 @@
     }
   },
   "definitions": {
-    "Empty": {
+    "gitLfsBatchResponse": {
       "type": "object",
-      "title": "Empty Schema"
+      "required": [
+        "objects"
+      ],
+      "properties": {
+        "transfer": {
+          "type": "string"
+        },
+        "objects": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "oid": {
+                "type": "string"
+              },
+              "size": {
+                "type": "number",
+                "minimum": 0
+              },
+              "authenticated": {
+                "type": "boolean"
+              },
+              "actions": {
+                "type": "object",
+                "properties": {
+                  "download": {
+                    "$ref": "#/definitions/gitLfsBatchResponseObjectsItemActionsDownload"
+                  },
+                  "upload": {
+                    "$ref": "#/definitions/gitLfsBatchResponseObjectsItemActionsDownload"
+                  },
+                  "verify": {
+                    "$ref": "#/definitions/gitLfsBatchResponseObjectsItemActionsDownload"
+                  }
+                }
+              },
+              "error": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "number"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message"
+                ]
+              }
+            },
+            "required": [
+              "oid",
+              "size"
+            ]
+          }
+        },
+        "message": {
+          "type": "string"
+        },
+        "request_id": {
+          "type": "string"
+        },
+        "documentation_url": {
+          "type": "string"
+        }
+      },
+      "title": "Git LFS HTTPS Batch API Response"
+    },
+    "gitLfsLockDeletionRequest": {
+      "type": "object",
+      "properties": {
+        "force": {
+          "type": "boolean"
+        },
+        "ref": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name"
+          ]
+        }
+      },
+      "title": "Git LFS HTTPS Lock Deletion API Request"
+    },
+    "gitLfsGenericErrorResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "documentation_url": {
+          "type": "string"
+        },
+        "request_id": {
+          "type": "string"
+        }
+      },
+      "title": "Git LFS HTTPS Generic Error API Response"
+    },
+    "gitLfsBatchRequest": {
+      "type": "object",
+      "required": [
+        "objects",
+        "operation"
+      ],
+      "properties": {
+        "transfers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "operation": {
+          "type": "string"
+        },
+        "objects": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "oid": {
+                "type": "string"
+              },
+              "size": {
+                "type": "number",
+                "minimum": 0
+              },
+              "authenticated": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "oid",
+              "size"
+            ]
+          }
+        }
+      },
+      "title": "Git LFS HTTPS Batch API Request"
+    },
+    "gitLfsLockCreationConflictReponse": {
+      "type": "object",
+      "properties": {
+        "lock": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            },
+            "locked_at": {
+              "type": "string"
+            },
+            "owner": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "required": [
+            "id",
+            "path"
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "documentation_url": {
+          "type": "string"
+        },
+        "request_id": {
+          "type": "string"
+        }
+      },
+      "title": "Git LFS HTTPS Lock Creation API Conflict Error Response"
+    },
+    "gitLfsLockCreationRequest": {
+      "type": "object",
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "ref": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name"
+          ]
+        }
+      },
+      "title": "Git LFS HTTPS Lock Creation API Request"
+    },
+    "gitLfsLockVerificationResponse": {
+      "type": "object",
+      "required": [
+        "ours",
+        "theirs"
+      ],
+      "properties": {
+        "ours": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/gitLfsLockVerificationResponseOursItem"
+          }
+        },
+        "theirs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/gitLfsLockVerificationResponseOursItem"
+          }
+        },
+        "next_cursor": {
+          "type": "string"
+        }
+      },
+      "title": "Git LFS HTTPS Lock Verify API Response"
+    },
+    "gitLfsLockVerificationResponseOursItem": {
+      "type": "object",
+      "required": [
+        "id",
+        "path"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "locked_at": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "gitLfsLockListResponse": {
+      "type": "object",
+      "required": [
+        "locks"
+      ],
+      "properties": {
+        "locks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              },
+              "locked_at": {
+                "type": "string"
+              },
+              "owner": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "next_cursor": {
+          "type": "string"
+        }
+      },
+      "title": "Git LFS HTTPS Lock List API Response"
+    },
+    "gitLfsBatchResponseObjectsItemActionsDownload": {
+      "type": "object",
+      "required": [
+        "href"
+      ],
+      "properties": {
+        "href": {
+          "type": "string"
+        },
+        "header": {
+          "type": "object",
+          "properties": {}
+        },
+        "expires_in": {
+          "type": "number",
+          "minimum": -2147483647,
+          "maximum": 2147483647
+        },
+        "expires_at": {
+          "type": "string"
+        }
+      }
+    },
+    "gitLfsLockCreationResponse": {
+      "type": "object",
+      "required": [
+        "lock"
+      ],
+      "properties": {
+        "lock": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            },
+            "locked_at": {
+              "type": "string"
+            },
+            "owner": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "required": [
+            "id",
+            "path"
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "request_id": {
+          "type": "string"
+        },
+        "documentation_url": {
+          "type": "string"
+        }
+      },
+      "title": "Git LFS HTTPS Lock Creation API Response"
+    },
+    "gitLfsLockVerificationRequest": {
+      "type": "object",
+      "properties": {
+        "cursor": {
+          "type": "string"
+        },
+        "limit": {
+          "type": "number"
+        },
+        "ref": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "title": "Git LFS HTTPS Lock Deletion API Request"
     }
   }
 }
+

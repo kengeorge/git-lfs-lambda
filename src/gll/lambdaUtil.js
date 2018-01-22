@@ -9,8 +9,14 @@ const lambda = new gll.configuredAWS.Lambda();
 const paths = gll.paths;
 const projectConfig = gll.projectConfig;
 
+const qutils = require('./qutils.js');
+const filter = qutils.filter;
+const firstOrDefault = qutils.firstOrDefault;
+const read = qutils.read;
+
 exports.deploy = deploy;
 exports.remove = remove;
+exports.get = getFunction;
 
 function deploy(functionName) {
     return verify(functionName)
@@ -24,7 +30,17 @@ function deploy(functionName) {
                         : createNewFunction(zipData, functionName);
                 })
         });
-};
+}
+
+function getFunction(functionName) {
+    return lambda.listFunctions({}).promise()
+        .then(read('Functions'))
+        .then(filter(function(f) {
+            return f.FunctionName == functionName;
+        }))
+        .then(firstOrDefault)
+    ;
+}
 
 function remove(functionName) {
     return verify(functionName)
@@ -34,7 +50,7 @@ function remove(functionName) {
         .then(function(name) {
             return lambda.deleteFunction({FunctionName: name}).promise();
         });
-};
+}
 
 function verify(functionName) {
     var deferred = Q.defer();

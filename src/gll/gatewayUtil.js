@@ -38,13 +38,6 @@ function deploy(apiName) {
 }
 
 function generateSpec(apiName) {
-    const apiData = {
-        apiTimestamp: new Date().toISOString(),
-        apiName: apiName,
-        stage: "development",
-        hostname: "localhost",
-        repoName: projectConfig.repoName,
-    };
     return readTemplate("api")
         .then(passTo(replace, apiData))
         .then(passTo(JSON.parse))

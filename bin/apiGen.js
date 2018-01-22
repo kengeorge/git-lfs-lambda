@@ -35,6 +35,18 @@ program
     });
 
 program
+    .command('get-function <functionName>')
+    .description('Fetch information on the specified function.')
+    .action(function(functionName, options){
+        lambda.get(functionName)
+            .then(qutils.peek)
+            .done();
+    })
+;
+//"arn:aws:apigateway:${awsRegion}:lambda:path/2015-03-31/functions/arn:aws:lambda:${awsRegion}:${accountNumber}:function:listLocks/invocations"
+//"arn:aws:apigateway:{region}:{subdomain.service|service}:path|action/{service_api}"
+
+program
     .command('remove-function [functionNames...]')
     .description('Remove specified function(s) from Lambda account.')
     .option('-a, --all', 'Remove all managed functions.')

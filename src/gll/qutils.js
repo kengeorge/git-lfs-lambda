@@ -7,7 +7,7 @@ exports.forEach = function(callFunc) {
             return callFunc(item);
         }));
     }
-}
+};
 
 exports.read = function(fieldName) {
     return function(input) {
@@ -15,14 +15,14 @@ exports.read = function(fieldName) {
             return input[fieldName];
         });
     }
-}
+};
 
 exports.peek = function(input) {
     return Q.fcall(function() {
         gll.log(gll.pretty(input));
         return input;
     });
-}
+};
 
 exports.filter = function(filterFunc) {
     return function(input) {
@@ -35,7 +35,13 @@ exports.filter = function(filterFunc) {
             return ret;
         })
     }
-}
+};
+
+exports.firstOrDefault = function(items) {
+    return Q.fcall(function() {
+        return items ? items[0] : null;
+    });
+};
 
 exports.qify = function(items){
     return Q.all(items.map(function(item){
@@ -43,7 +49,7 @@ exports.qify = function(items){
             return item;
         })
     }));
-}
+};
 
 exports.passTo = function(){
     var varArgs = Array.from(arguments);
@@ -54,4 +60,4 @@ exports.passTo = function(){
         all.unshift(func);
         return Q.fcall.apply(this, all);
     };
-}
+};
