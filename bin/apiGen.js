@@ -14,6 +14,10 @@ const paths = gll.paths;
 
 const qutils = require('../src/gll/qutils.js');
 const passTo = qutils.passTo;
+const promiseFor = qutils.promiseFor;
+const flatten = qutils.flatten;
+const filter = qutils.filter;
+const removeNulls = qutils.removeNulls;
 const peek = qutils.peek;
 const forEach = qutils.forEach;
 const qify = qutils.qify;
@@ -48,23 +52,11 @@ program
         configure(repoName)
 
             .then(print('Deploying functions...'))
-            .then(fork(function(instance) {
+            .then(populate('lambdaFunctions', function(instance) {
                 return getAllFunctions()
                     .then(forEach(lambda.deploy))
-                    .then(forEach(function (func) {
-                        instance[func.FunctionName] = func;
-                    }))
                 ;
             }))
-
-            .then(print('Compiling API spec...'))
-            .then(populate('apiSpec', function(instance) {
-                return readTemplate()
-                    .then(passTo(replace, instance))
-                    .then(passTo(JSON.parse))
-                ;
-            }))
-
 
             .then(print('Checking for existing API...'))
             .then(fork(function(instance) {
@@ -81,14 +73,16 @@ program
                 ;
             }))
 
-            .then(print('Creating api...'))
+            .then(print('Compiling API spec...'))
             .then(populate('apiObj', function(instance) {
-                return gateway
-                    .createFromSpec(instance.apiSpec)
+                return readTemplate()
+                    .then(passTo(replace, instance))
+                    .then(passTo(JSON.parse))
+                    .then(gateway.createFromSpec)
                     ;
             }))
 
-            .then(print('Deploying api..'))
+            .then(print('Deploying api...'))
             .then(fork(function(instance) {
                 return gateway
                     .deploy(instance.apiObj, instance.stage)
@@ -96,43 +90,116 @@ program
             }))
 
             .then(print('Setting gateway permissions to lambda functions...'))
-            .then(print('TODO'))
+            .then(populate('permissions', function(instance) {
+                return gateway
+                    .getResources(instance.apiObj)
+                    .then(forEach(read('path', 'resourceMethods')))
+                    .then(filter(function(pair) { return pair.resourceMethods; }))
+                    .then(forEach(function(pair) {
+                        var ret = [];
+                        for(var method in pair.resourceMethods) {
+                            ret.push({
+                                path: pair.path,
+                                httpMethod: method,
+                                uri: pair.resourceMethods[method].methodIntegration.uri
+                            });
+                        }
+                        return ret;
+                    }))
+                    .then(flatten)
+                    .then(forEach(function(method) {
+                        //TODO seems weird to get names here again since we have them elsewhere in the instance context.
+                        var functionName = method.uri
+                            .match(/function:([^\s]+)\/invocations/)[1];
+                        ;
 
-            .then(print("Done!"))
+                        //TODO I can *see* this arn on the APIGateway console method details page,
+                        //  but canNOT friggin' figure out where to fetch it from, so let's just reconstruct it.
+                        var sourceArn = format('arn:aws:execute-api:%s:%s:%s/*/%s%s',
+                            instance.awsRegion,
+                            instance.accountNumber,
+                            instance.apiObj.id,
+                            method.httpMethod,
+                            method.path.replace(/\{id\}/, '*')
+                        );
+
+                        const statement = "git-lfs-generated-permission";
+
+                        return {functionName: functionName, sourceArn: sourceArn, sid: statement};
+                    }))
+                    .then(forEach(populate('existingPolicy', function(param){
+                        return lambda.getPolicy(param.functionName)
+                            .then(function(policy) {
+                                if(policy == null) return null;
+                                for(var i = 0; i < policy.Statement.length; i++) {
+                                    var s = policy.Statement[i];
+                                    if(s.Sid == param.sid) return s;
+                                }
+                                return null;
+                            })
+                    })))
+                    .then(fork(forEach(function(param) {
+                        if(param.existingPolicy) {
+                            return lambda.removePermission(param.functionName, param.sid);
+                        }
+                    })))
+                    .then(forEach(function(param){
+                        return lambda.addInvokePermission(param.functionName, param.sourceArn, param.sid);
+                    }))
+                    //TODO left off here: cleaned up the input, should be easy to finish removing
+                        // old policies
+                    /*
+                            .then(peek)
+                            .then(read('Statement'))
+                            .then(filter(function(s) { return s.Sid == param.sid; }))
+                            .then(forEach(function(matching){
+                                log("Removing existing permission: %s", pretty(matching));
+                                return lambda.removePermission(param.functionName, param.sid);
+                            }))
+                        ;
+                    })))*/
+            }))
+            .then(peek)
+            .then(print("API Deployed!"))
             .done();
-
     })
 ;
 
-function fakeDeploy(functionName) {
-    return {
-        "FunctionName": functionName,
-        "FunctionArn": "arn:aws:lambda:us-west-2:548425624042:function:" + functionName + ":11",
-        "Runtime": "nodejs6.10",
-        "Role": "arn:aws:iam::548425624042:role/service-role/git-lfs-service",
-        "Handler": "verifyLocks.handler",
-        "CodeSize": 859,
-        "Description": "",
-        "Timeout": 3,
-        "MemorySize": 128,
-        "LastModified": "2018-01-19T20:03:17.158+0000",
-        "CodeSha256": "EmcGdZ5Fk/9dhMiZ8jik8vtQPifd0zwkU6+qQ4y0xzg=",
-        "Version": "11",
-        "KMSKeyArn": null,
-        "TracingConfig": {
-            "Mode": "PassThrough"
-        },
-        "MasterArn": null
-    };
-}
-
+//Dev use
 program
-    .command('get-function <functionName>')
+    .command('get-policies [functionNames...]')
     .description('Fetch information on the specified function.')
-    .action(function(functionName, options){
-        lambda.get(functionName)
+    .option('-a, --all', 'Get policies for all managed functions.')
+    .action(function(functionNames, options){
+        var list = options.all ? getAllFunctions() : qify(functionNames);
+        list
+            .then(forEach(function(functionName) {
+                return lambda.getPolicy(functionName)
+                    .then(function(policy){
+                        return {
+                            name: functionName,
+                            policy: policy
+                        };
+                    })
+            }))
+            .then(peek)
+            //.then(forEach(read('Policy')))
+            //.then(peek)
+            //.then(passTo(JSON.parse))
+            //.then(peek)
+            .done();
+        /*
+        var test = [[1,2],3,[4,[5,6]],7];
+        qify(test)
+            .then(peek)
+            .then(flatten)
+            .then(peek)
+            .done();
+        /*
+        lambda.getPolicy(functionName)
             .then(qutils.peek)
             .done();
+            */
     })
 ;
 
@@ -156,10 +223,6 @@ function deployAllFunctions() {
         ;
 }
 
-
-
-//"arn:aws:apigateway:${awsRegion}:lambda:path/2015-03-31/functions/arn:aws:lambda:${awsRegion}:${accountNumber}:function:listLocks/invocations"
-//"arn:aws:apigateway:{region}:{subdomain.service|service}:path|action/{service_api}"
 
 program
     .command('remove-function [functionNames...]')
@@ -226,7 +289,9 @@ program
     .command('remove-api <apiName>')
     .description('Remove specified api from APIGateway account.')
     .action(function(apiName, options) {
-        gateway.remove(apiName)
+        gateway
+            .getApis(apiName)
+            .then(forEach(gateway.remove))
             .then(function (results) {
                 log("Api removal results: %s", pretty(results));
             })
@@ -256,16 +321,6 @@ program.parse(process.argv);
 if(process.argv.slice(2).length <= 0) {
     console.log("No valid command found.")
     program.outputHelp();
-}
-
-//TODO
-function makeGatewayArn(awsRegion, accountId, apiId, methodType, resourcePath){
-    return format("arn:aws:execute-api:%s:%s:%s/*/%s/%s",
-        awsRegion, accountId, apiId, methodType, resourcePath);
-}
-
-function makeStatementId() {
-    return "git-lfs-lambda-permissions-test";
 }
 
 function readTemplate() {

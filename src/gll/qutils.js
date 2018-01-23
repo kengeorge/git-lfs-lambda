@@ -1,7 +1,8 @@
 const Q = require('Q');
 const gll = require('./base.js')
 
-exports.forEach = function(callFunc) {
+
+exports.forEachItem = function(callFunc) {
     return function (input) {
         return Q.all(Array.from(input).map(function (item) {
             return callFunc(item);
@@ -9,9 +10,48 @@ exports.forEach = function(callFunc) {
     }
 };
 
-exports.read = function(fieldName) {
+exports.forEachField = function(callFunc){
     return function(input) {
-        return Q.fcall(function() {
+        var calls = [];
+        for(var k in input) {
+            calls.push(Q.fcall(function() {
+                return callFunc(k, input[k]);
+            }));
+        }
+        return Q.all(calls);
+    };
+};
+
+exports.promiseFor = function(value) {
+    return Q.fcall(function(){
+        return value;
+    });
+};
+
+exports.forEach = function(callFunc) {
+    return function(input) {
+        if (Array.isArray(input)) return exports.forEachItem(callFunc)(input);
+        else return exports.forEachField(callFunc)(input);
+    };
+};
+
+exports.read = function(fieldName) {
+    if(arguments.length > 1) {
+        var varArgs = Array.from(arguments);
+        return function(input) {
+            return Q.fcall(function () {
+                var ret = {};
+                for(var i = 0; i < varArgs.length; i++) {
+                    var name = varArgs[i];
+                    ret[name] = input[name];
+                }
+                return ret;
+            });
+        };
+    }
+
+    return function (input) {
+        return Q.fcall(function () {
             return input[fieldName];
         });
     }
@@ -44,8 +84,8 @@ exports.fork = function(handlerFunc) {
     };
 };
 
-exports.populate = function(fieldName, handlerFunc){
-    return function(input) {
+exports.populate = function(fieldName, handlerFunc) {
+    return function (input) {
         return handlerFunc(input)
             .then(function (results) {
                 input[fieldName] = results;
@@ -62,6 +102,9 @@ exports.ret = function(input) {
 
 exports.filter = function(filterFunc) {
     return function(input) {
+        if(!Array.isArray(input)) {
+            throw new Error("Cannot filter a non-array");
+        }
         return Q.fcall(function(){
             var ret = [];
             for(var k in input){
@@ -72,6 +115,10 @@ exports.filter = function(filterFunc) {
         })
     }
 };
+
+exports.removeNulls = exports.filter(function (item) {
+    return item != null && item != undefined;
+});
 
 exports.firstOrDefault = function(items) {
     return Q.fcall(function() {
@@ -86,6 +133,27 @@ exports.qify = function(items){
         })
     }));
 };
+
+exports.flatten = function(items) {
+    return Q.fcall(function() {
+        return flatten(items);
+    });
+};
+
+function flatten(items){
+    var ret = [];
+    if(!items) return ret;
+    for(var key in items) {
+        var item = items[key];
+        if(!Array.isArray(item)) {
+            ret.push(item);
+            continue;
+        }
+        var subitems = flatten(item);
+        ret = ret.concat(subitems);
+    }
+    return ret;
+}
 
 exports.passTo = function(){
     var varArgs = Array.from(arguments);

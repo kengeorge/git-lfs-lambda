@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 const program = require('commander');
+const format = require('util').format;
 
 const qutils = require('../src/gll/qutils.js');
 const read = qutils.read;
@@ -76,9 +77,13 @@ const lfs = {
 program.version(gll.projectConfig.version);
 
 program
-    .command('test [api] [resourcePath] [method]')
+    .command('* [repoName]')
     .description("Call API Gateway's test method.")
-    .action(function(apiName, resourcePath, method, options) {
+    .action(function(repoName, options) {
+        var apiName = format("git-lfs-lambda-%s", repoName);
+        var resourcePath = format("/%s.git/info/lfs/locks", repoName);
+        var method = "POST";
+
         test.gateway(apiName, resourcePath, method, lfs.locks.create.payload)
             .then(qutils.peek)
             .then(read('body'))
@@ -92,13 +97,6 @@ program
         ;
     });
 ;
-
-program
-    .command('*')
-    .action(function(env){
-        console.log("No valid command found.")
-        program.outputHelp();
-    });
 
 program.parse(process.argv);
 

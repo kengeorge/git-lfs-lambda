@@ -16,6 +16,7 @@ exports.getApis = getApis;
 exports.getFirstApi = getFirstApi;
 exports.getApiSpec = getApiSpec;
 exports.getResources = getResources;
+exports.getIntegration = getIntegration;
 exports.testInvokeMethod = testInvokeMethod;
 exports.createFromSpec = createFromSpec;
 exports.remove = remove;
@@ -45,6 +46,18 @@ function getApiSpec(api) {
         .then(read('body'))
         .then(passTo(JSON.parse))
         ;
+}
+
+function getIntegration(api){
+    var params = {
+        httpMethod: method,
+        resourceId: resourceId,
+        restApiId: api.id
+
+    };
+    return gateway.getIntegration(params).promise()
+        .then(passTo(JSON.parse))
+    ;
 }
 
 function getFirstApi(apiName) {

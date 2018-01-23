@@ -11,13 +11,17 @@ const projectConfig = gll.projectConfig;
 
 const qutils = require('./qutils.js');
 const filter = qutils.filter;
+const forEach = qutils.forEach;
+const passTo = qutils.passTo;
 const firstOrDefault = qutils.firstOrDefault;
 const read = qutils.read;
 
 exports.deploy = deploy;
 exports.remove = remove;
-exports.get = getFunction;
+exports.getFunction = getFunction;
 exports.addInvokePermission = addInvokePermission;
+exports.removePermission = removePermission;
+exports.getPolicy = getPolicy;
 
 function deploy(functionName) {
     return verify(functionName)
@@ -36,11 +40,22 @@ function deploy(functionName) {
 
 function getFunction(functionName) {
     return lambda.listFunctions({}).promise()
+
         .then(read('Functions'))
         .then(filter(function(f) {
-            return f.FunctionName == getDeploymentName(functionName);
+            return f.FunctionName == functionName;
         }))
         .then(firstOrDefault)
+    ;
+}
+
+function getPolicy(functionName) {
+    return lambda.getPolicy({FunctionName: functionName}).promise()
+        .then(read('Policy'))
+        .then(passTo(JSON.parse))
+        .catch(function(err) {
+            return null;
+        })
     ;
 }
 
@@ -56,46 +71,32 @@ function remove(functionName) {
 
 function verify(functionName) {
     var deferred = Q.defer();
-    fs.access(paths.sourceRootFor(functionName), function(err) {
-        if(err) deferred.reject(new Error(err));
+    fs.access(paths.sourceRootFor(functionName), function (err) {
+        if (err) deferred.reject(new Error(err));
         else deferred.resolve(functionName)
     });
-    return deferred.promise;
+    return deferred.promise
 }
 
-function addPermissionRun(apiName) {
-    gateway.getApi(apiName)
-        .then(peek)
-        .then(read('id'))
-        .then(addInvokePermission)
-        .catch(function (err) {
-            log("Could not add permission: %s", err);
-        })
-        .then(function () {
-            return getPolicy(functionName);
-        })
-        .then(peek)
-        .done()
-    ;
+function removePermission(functionName, sid) {
+    gll.log("Removing %s", functionName);
+    var params = {
+        FunctionName: functionName,
+        StatementId: sid
+    };
+    return lambda.removePermission(params).promise();
 }
 
-function addInvokePermission(apiId) {
-    var arn = makeGatewayArn(
-        gll.projectConfig.awsRegion,
-        "548425624042",
-        apiId,
-        "POST",
-        "myrepo.git/info/lfs/locks"
-    );
+function addInvokePermission(functionName, sourceArn, statementId) {
+    gll.log("Adding %s", functionName);
     var params = {
         Action: "lambda:InvokeFunction",
-        FunctionName: functionName,
         Principal: "apigateway.amazonaws.com",
-        StatementId: makeStatementId(),
-        SourceArn: arn
+        FunctionName: functionName,
+        SourceArn: sourceArn,
+        StatementId: statementId,
     };
-    return lambda.addPermission(params).promise()
-        .then(qCall(JSON.Parse));
+    return lambda.addPermission(params).promise();
 }
 
 function zip(functionName) {
@@ -134,6 +135,7 @@ function zip(functionName) {
     archive.finalize();
 
     return deferred.promise;
+
 }
 
 function readZipBits(zipFile) {
