@@ -101,3 +101,8 @@ program
     });
 
 program.parse(process.argv);
+
+if(process.argv.slice(2).length <= 0) {
+    console.log("No valid command found.")
+    program.outputHelp();
+}

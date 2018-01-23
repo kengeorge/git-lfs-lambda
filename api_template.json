@@ -172,7 +172,7 @@
         }
       }
     },
-    "/myrepo.git/info/lfs/locks/verify": {
+    "/${repoName}.git/info/lfs/locks/verify": {
       "post": {
         "consumes": [
           "application/json"
@@ -265,7 +265,7 @@
         }
       }
     },
-    "/myrepo.git/info/lfs/locks/{id}/unlock": {
+    "/${repoName}.git/info/lfs/locks/{id}/unlock": {
       "post": {
         "consumes": [
           "application/json"
@@ -353,7 +353,7 @@
         }
       }
     },
-    "/myrepo.git/info/lfs/objects/batch": {
+    "/${repoName}.git/info/lfs/objects/batch": {
       "post": {
         "consumes": [
           "application/json"

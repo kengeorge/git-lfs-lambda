@@ -15,11 +15,11 @@ const gateway = new gll.configuredAWS.APIGateway();
 exports.getApis = getApis;
 exports.getFirstApi = getFirstApi;
 exports.getApiSpec = getApiSpec;
-exports.generateSpec = generateSpec;
 exports.getResources = getResources;
 exports.testInvokeMethod = testInvokeMethod;
-exports.deploy = deploy;
+exports.createFromSpec = createFromSpec;
 exports.remove = remove;
+exports.deploy = deploy;
 
 function getResources(api) {
     var params = {
@@ -29,18 +29,6 @@ function getResources(api) {
     return gateway.getResources(params).promise()
         .then(read('items'))
     ;
-}
-
-function deploy(apiName) {
-    return generateSpec(apiName)
-        .then(passTo(uploadApi))
-        ;
-}
-
-function generateSpec(apiName) {
-    return readTemplate("api")
-        .then(passTo(replace, apiData))
-        .then(passTo(JSON.parse))
 }
 
 function getApiSpec(api) {
@@ -74,12 +62,8 @@ function getApis(apiName) {
         ;
 }
 
-function remove(apiName) {
-    return getFirstApi(apiName)
-        .then(function (api) {
-            return gateway.deleteRestApi({restApiId: api.id}).promise();
-        })
-        ;
+function remove(api) {
+    return gateway.deleteRestApi({restApiId: api.id}).promise();
 }
 
 function testInvokeMethod(api, resource, method, payload){
@@ -96,7 +80,16 @@ function testInvokeMethod(api, resource, method, payload){
     return gateway.testInvokeMethod(params).promise();
 }
 
-function uploadApi(apiText) {
+function deploy(api, stageName) {
+    var params = {
+        restApiId: api.id,
+        stageName: stageName
+    };
+    return gateway.createDeployment(params).promise();
+}
+
+function createFromSpec(apiSpec) {
+    var apiText = JSON.stringify(apiSpec);
     var params = {
         body: Buffer.from(apiText),
         failOnWarnings: true,
@@ -107,22 +100,4 @@ function uploadApi(apiText) {
     return gateway.importRestApi(params).promise();
 }
 
-function readTemplate(type) {
-    var deferred = Q.defer();
-    fs.readFile("./"+type+"_template.json", "utf-8", function(err, data){
-        if(err) deferred.reject(new Error(err));
-        else deferred.resolve(data);
-    });
-    return deferred.promise;
-}
 
-function replace(text, placeholderData) {
-    for(var key in placeholderData) {
-        var data = placeholderData[key];
-        var token = format("${%s}", key);
-        text = text.replace(token, data);
-    }
-    var remaining = text.match(/\$\{(\w+)\}/);
-    if(!remaining) return text;
-    throw new Error(format("Unreplaced token: [%s]", remaining[0]));
-}

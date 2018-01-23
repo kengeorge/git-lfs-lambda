@@ -20,7 +20,7 @@ function pretty(data) {
 
 
 function projectRoot() {
-    //TODO
+    //TODO ?
     return process.cwd();
 }
 

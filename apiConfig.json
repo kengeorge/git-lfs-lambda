@@ -1,9 +1,7 @@
 {
-  "apiName": "git-lfs-lambda-FULL",
+  "repoApiPrefix": "git-lfs-lambda-",
   "stage": "development",
   "hostname": "localhost",
-  "repoName": "coolrepo",
-
-
+  "awsRegion": "us-west-2",
   "accountNumber": "548425624042"
 }

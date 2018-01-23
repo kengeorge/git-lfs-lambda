@@ -24,6 +24,42 @@ exports.peek = function(input) {
     });
 };
 
+exports.print = function(message) {
+    return function(input) {
+        gll.log(gll.pretty(message));
+        return Q.fcall(function() {
+            return input;
+        });
+    };
+};
+
+exports.fork = function(handlerFunc) {
+    return function(input) {
+        return Q.fcall(function() {
+            return handlerFunc(input);
+        })
+        .then(function() {
+            return input;
+        });
+    };
+};
+
+exports.populate = function(fieldName, handlerFunc){
+    return function(input) {
+        return handlerFunc(input)
+            .then(function (results) {
+                input[fieldName] = results;
+                return input;
+            });
+    };
+};
+
+exports.ret = function(input) {
+    return function() {
+        return input;
+    }
+};
+
 exports.filter = function(filterFunc) {
     return function(input) {
         return Q.fcall(function(){

@@ -17,6 +17,7 @@ const read = qutils.read;
 exports.deploy = deploy;
 exports.remove = remove;
 exports.get = getFunction;
+exports.addInvokePermission = addInvokePermission;
 
 function deploy(functionName) {
     return verify(functionName)
@@ -29,14 +30,15 @@ function deploy(functionName) {
                         ? updateFunction(zipData, functionName)
                         : createNewFunction(zipData, functionName);
                 })
-        });
+        })
+    ;
 }
 
 function getFunction(functionName) {
     return lambda.listFunctions({}).promise()
         .then(read('Functions'))
         .then(filter(function(f) {
-            return f.FunctionName == functionName;
+            return f.FunctionName == getDeploymentName(functionName);
         }))
         .then(firstOrDefault)
     ;
@@ -69,7 +71,7 @@ function addPermissionRun(apiName) {
         .catch(function (err) {
             log("Could not add permission: %s", err);
         })
-        .then(function (whatever) {
+        .then(function () {
             return getPolicy(functionName);
         })
         .then(peek)
