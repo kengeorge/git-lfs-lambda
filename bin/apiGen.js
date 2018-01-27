@@ -44,6 +44,13 @@ function configure(repoName) {
     ;
 }
 
+/**
+ * This way-too-big process results in:
+ * 1) All lambda functions being deployed (or updated) to the AWS region.
+ * 2) An APIGateway API with the GIT-LFS specified structure and prefixed with the
+ * requested repository name being added to the AWS region.
+ * 3) Permission added on the API method calls to allow them to invoke the lambda functions.
+ */
 program
     .command('generate <repoName>')
     .description('Deploy a new git-lfs-lambda api based on apiConfig.json')
@@ -146,18 +153,6 @@ program
                     .then(forEach(function(param){
                         return lambda.addInvokePermission(param.functionName, param.sourceArn, param.sid);
                     }))
-                    //TODO left off here: cleaned up the input, should be easy to finish removing
-                        // old policies
-                    /*
-                            .then(peek)
-                            .then(read('Statement'))
-                            .then(filter(function(s) { return s.Sid == param.sid; }))
-                            .then(forEach(function(matching){
-                                log("Removing existing permission: %s", pretty(matching));
-                                return lambda.removePermission(param.functionName, param.sid);
-                            }))
-                        ;
-                    })))*/
             }))
             .then(peek)
             .then(print("API Deployed!"))
