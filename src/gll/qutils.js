@@ -64,6 +64,10 @@ exports.peek = function(input) {
     });
 };
 
+exports.output = function(input) {
+    gll.log(gll.pretty(input));
+};
+
 exports.print = function(message) {
     return function(input) {
         gll.log(gll.pretty(message));

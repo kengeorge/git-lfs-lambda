@@ -11,73 +11,11 @@ const gll = require('../src/gll/base.js');
 const log = gll.log;
 const pretty = gll.pretty;
 
-const lfs = {
-    locks: {
-        create: {
-            path: "/locks",
-            method: "POST",
-            payload: {
-                path: "foo/bar.zip",
-                ref: {
-                    name: "refs/heads/my-feature"
-                }
-            },
-            response: {
-                code: 201,
-                body: {
-                    lock: {
-                        id: "some-uuid",
-                        path: "/path/to/file",
-                        locked_at: "2016-05-17T15:49:06+00:00",
-                        owner: {
-                            name: "Jane Doe",
-                        }
-                    }
-                }
-            },
-            error: {
-                exists: {
-                    response: {
-                        code: 409,
-                        body: {
-                            "lock": {
-                                // details of existing lock
-                            },
-                            "message": "already created lock",
-                            "documentation_url": "https://lfs-server.com/docs/errors",
-                            "request_id": "123"
-                        }
-                    }
-                },
-                unauthorized: {
-                    code: 403,
-                    body: {
-                        "message": "You must have push access to create a lock",
-                        "documentation_url": "https://lfs-server.com/docs/errors",
-                        "request_id": "123"
-                    }
-                },
-                internal: {
-                    code: 500,
-                    body: {
-                        "message": "internal server error",
-                        "documentation_url": "https://lfs-server.com/docs/errors",
-                        "request_id": "123"
-                    }
-                }
-            }
-        }
-    },
-    batch: {
-        path: "/objects/batch",
-        payload: {}
-    }
-};
-
 program.version(gll.projectConfig.version);
 
+/*
 program
-    .command('* [repoName]')
+    .command('test [repoName]')
     .description("Call API Gateway's test method.")
     .action(function(repoName, options) {
         var apiName = format("git-lfs-lambda-%s", repoName);
@@ -97,10 +35,28 @@ program
         ;
     });
 ;
+*/
+
+program
+    .command('test <repoName> <resource>')
+    .description("Call API Gateway's test method on the batch resource.")
+    .action(function(repoName, options) {
+        return test.batch(repoName)
+            .done();
+    })
+;
+
+program
+    .command('*')
+    .action(function(env){
+        console.log("Not a valid command!");
+        program.outputHelp();
+    })
+;
 
 program.parse(process.argv);
 
 if(process.argv.slice(2).length <= 0) {
-    console.log("No valid command found.")
+    console.log("No valid command found.");
     program.outputHelp();
 }

@@ -1,12 +1,6 @@
 {
-  "awsRegion": "us-west-2",
   "functionRuntime": "nodejs6.10",
   "deploymentPackageTemplate": "deploymentPackage-%s.zip",
   "outputDir": "tmp",
-  "sourceDir": "src",
-
-  "repoName": "myrepo",
-  "stageName": "development",
-  "repo": "lambdaLfsTest",
-  "lambdaRoleArn": "arn:aws:iam::548425624042:role/service-role/git-lfs-service"
+  "sourceDir": "src"
 }

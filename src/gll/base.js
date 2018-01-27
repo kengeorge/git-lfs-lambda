@@ -5,7 +5,8 @@ const path = require('path');
 const Q = require('Q');
 
 const projectConfig = JSON.parse(fs.readFileSync("config.json"));
-AWS.config.update({region: projectConfig.awsRegion});
+const apiConfig = JSON.parse(fs.readFileSync("apiConfig.json"));
+AWS.config.update({region: apiConfig.awsRegion});
 AWS.config.setPromisesDependency(require('Q').Promise);
 
 function log() {
