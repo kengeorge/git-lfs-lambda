@@ -77,17 +77,6 @@ exports.print = function(message) {
     };
 };
 
-exports.fork = function(handlerFunc) {
-    return function(input) {
-        return Q.fcall(function() {
-            return handlerFunc(input);
-        })
-        .then(function() {
-            return input;
-        });
-    };
-};
-
 exports.populate = function(fieldName, handlerFunc) {
     return function (input) {
         return handlerFunc(input)

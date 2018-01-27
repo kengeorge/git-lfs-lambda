@@ -22,7 +22,6 @@ const peek = qutils.peek;
 const forEach = qutils.forEach;
 const qify = qutils.qify;
 const print = qutils.print;
-const fork = qutils.fork;
 const read = qutils.read;
 const populate = qutils.populate;
 
@@ -66,19 +65,19 @@ program
             }))
 
             .then(print('Checking for existing API...'))
-            .then(fork(function(instance) {
+            .tap(function(instance) {
                 return gateway
                     .getFirstApi(instance.apiName)
-                    .then(fork(function(api) {
+                    .tap(function(api) {
                         if(!api) {
                             log('%s not found.', instance.apiName);
                             return null;
                         }
                         log('Detected existing instance of %s, removing...', instance.apiName);
                         return gateway.remove(api);
-                    }))
+                    })
                 ;
-            }))
+            })
 
             .then(print('Compiling API spec...'))
             .then(populate('apiObj', function(instance) {
@@ -90,11 +89,11 @@ program
             }))
 
             .then(print('Deploying api...'))
-            .then(fork(function(instance) {
+            .tap(function(instance) {
                 return gateway
                     .deploy(instance.apiObj, instance.stage)
                 ;
-            }))
+            })
 
             .then(print('Setting gateway permissions to lambda functions...'))
             .then(populate('permissions', function(instance) {
@@ -145,11 +144,11 @@ program
                                 return null;
                             })
                     })))
-                    .then(fork(forEach(function(param) {
+                    .tap(forEach(function(param) {
                         if(param.existingPolicy) {
                             return lambda.removePermission(param.functionName, param.sid);
                         }
-                    })))
+                    }))
                     .then(forEach(function(param){
                         return lambda.addInvokePermission(param.functionName, param.sourceArn, param.sid);
                     }))
