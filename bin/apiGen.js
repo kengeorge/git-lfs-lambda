@@ -28,9 +28,7 @@ function getAllFunctions(){
 }
 
 function configure(repoName) {
-    return Q
-        .nfcall(fs.readFile, "./apiConfig.json")
-        .then(JSON.parse)
+    return Q(gll.apiConfig)
         .then(function(apiConfig) {
             apiConfig.apiName = format('%s%s', apiConfig.repoApiPrefix, repoName);
             apiConfig.repoName = repoName;
