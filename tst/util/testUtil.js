@@ -60,7 +60,6 @@ exports.batch = function(repoName) {
         ]
     };
     //gll.log(gll.pretty(f('one')));
-    //return f('two').then(qutils.peek);
     //f that takes incoming and returns desired final value
     //read: f that takes incoming and returns
     return getConfig(repoName)
@@ -71,7 +70,6 @@ exports.batch = function(repoName) {
         }))
         .get('api')
         .tap(output)
-        //.then(qutils.peek)
         .thenReject("Becuase I want to")
         .then(gateway.getResources)
         .then(filter(function(item) { return item.path == resourcePath; }))
@@ -79,7 +77,8 @@ exports.batch = function(repoName) {
         .then(function(resource){
             return gateway.testInvokeMethod()
         })
-        .then(qutils.peek).then(function() { throw new Error("STOP");})
+        .tap(log)
+        .thenReject("STOP")
     ;
 }
 

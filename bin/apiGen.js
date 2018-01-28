@@ -17,7 +17,6 @@ const promiseFor = qutils.promiseFor;
 const flatten = qutils.flatten;
 const filter = qutils.filter;
 const removeNulls = qutils.removeNulls;
-const peek = qutils.peek;
 const forEach = qutils.forEach;
 const qify = qutils.qify;
 const print = qutils.print;
@@ -56,7 +55,7 @@ program
 
         configure(repoName)
 
-            .tap(log('Deploying functions...'))
+            .then(print('Deploying functions...'))
             .then(populate('lambdaFunctions', function(instance) {
                 return getAllFunctions()
                     .then(forEach(lambda.deploy))
@@ -154,8 +153,8 @@ program
                         return lambda.addInvokePermission(param.functionName, param.sourceArn, param.sid);
                     }))
             }))
-            //.then(peek)
-            //.then(print("API Deployed!"))
+            .tap(log)
+            .then(print("API Deployed!"))
             .done();
     })
 ;
@@ -177,23 +176,8 @@ program
                         };
                     })
             }))
-            .then(peek)
-            //.then(forEach(read('Policy')))
-            //.then(peek)
-            //.then(peek)
+            .tap(log)
             .done();
-        /*
-        var test = [[1,2],3,[4,[5,6]],7];
-        qify(test)
-            .then(peek)
-            .then(flatten)
-            .then(peek)
-            .done();
-        /*
-        lambda.getPolicy(functionName)
-            .then(qutils.peek)
-            .done();
-            */
     })
 ;
 
@@ -301,7 +285,7 @@ program
     .action(function(apiName, options){
         gateway.getFirstApi(apiName)
             .then(gateway.getApiSpec)
-            .then(qutils.peek)
+            .tap(log)
             .done();
     });
 

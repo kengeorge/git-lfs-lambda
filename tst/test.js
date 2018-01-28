@@ -22,7 +22,6 @@ program
         var method = "POST";
 
         test.gateway(apiName, resourcePath, method, lfs.locks.create.payload)
-            .then(qutils.peek)
             .then(read('body'))
             .then(JSON.parse)
             .then(function(response){

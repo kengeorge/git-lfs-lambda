@@ -10,7 +10,7 @@ AWS.config.update({region: apiConfig.awsRegion});
 AWS.config.setPromisesDependency(require('Q').Promise);
 
 function log() {
-    var formatted = format.apply(this, arguments);
+    var formatted = format.apply(this, Array.from(arguments).map(pretty));
     console.log(formatted);
 }
 
@@ -18,7 +18,6 @@ function pretty(data) {
     if(typeof data === 'object') return JSON.stringify(data, null, 2);
     return data;
 }
-
 
 function projectRoot() {
     //TODO ?

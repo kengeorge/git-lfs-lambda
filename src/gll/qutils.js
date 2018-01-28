@@ -57,13 +57,6 @@ exports.read = function(fieldName) {
     }
 };
 
-exports.peek = function(input) {
-    return Q.fcall(function() {
-        gll.log(gll.pretty(input));
-        return input;
-    });
-};
-
 exports.print = function(message) {
     return function(input) {
         gll.log(gll.pretty(message));
