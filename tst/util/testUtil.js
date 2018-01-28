@@ -6,6 +6,7 @@ const fs = require('fs');
 const qutils = require("../../src/gll/qutils.js");
 const read = qutils.read;
 const filter = qutils.filter;
+const decorate = qutils.decorate;
 
 const gll = require("../../src/gll/base.js");
 const gateway = require("../../src/gll/gatewayUtil.js");
@@ -47,14 +48,14 @@ exports.batch = function(repoName, method) {
         }
     };
     return Q(params)
-        .tap(qutils.populate('restApiId', function(params) {
+        .then(decorate('restApiId', function(params) {
             return Q(params)
                 .get('apiName')
                 .then(gateway.getFirstApi)
                 .get('id')
             ;
         }))
-        .then(qutils.populate('resourceId', function(params) {
+        .then(decorate('resourceId', function(params) {
             return Q(params)
                 .get('restApiId')
                 .then(gateway.getResources)

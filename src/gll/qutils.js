@@ -81,7 +81,7 @@ exports.list = function() {
     };
 };
 
-exports.populate = function(fieldName, handlerFunc) {
+exports.decorate = function(fieldName, handlerFunc) {
     return function (input) {
         return handlerFunc(input)
             .then(function (results) {

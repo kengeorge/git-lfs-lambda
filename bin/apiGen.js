@@ -19,7 +19,7 @@ const filter = qutils.filter;
 const forEach = qutils.forEach;
 const qify = qutils.qify;
 const print = qutils.print;
-const populate = qutils.populate;
+const decorate = qutils.decorate;
 
 program.version(gll.projectConfig.version);
 
@@ -54,7 +54,7 @@ program
         configure(repoName)
 
             .then(print('Deploying functions...'))
-            .then(populate('lambdaFunctions', function(instance) {
+            .then(decorate('lambdaFunctions', function(instance) {
                 return getAllFunctions()
                     .then(forEach(lambda.deploy))
                 ;
@@ -76,7 +76,7 @@ program
             })
 
             .then(print('Compiling API spec...'))
-            .then(populate('apiObj', function(instance) {
+            .then(decorate('apiObj', function(instance) {
                 return readTemplate()
                     .then(function(text) {
                         return replace(text, instance);
@@ -94,7 +94,7 @@ program
             })
 
             .then(print('Setting gateway permissions to lambda functions...'))
-            .then(populate('permissions', function(instance) {
+            .then(decorate('permissions', function(instance) {
                 return gateway
                     .getResources(instance.apiObj.id)
                     .then(forEach(pull('path', 'resourceMethods')))
@@ -131,7 +131,7 @@ program
 
                         return {functionName: functionName, sourceArn: sourceArn, sid: statement};
                     }))
-                    .then(forEach(populate('existingPolicy', function(param){
+                    .then(forEach(decorate('existingPolicy', function(param){
                         return lambda.getPolicy(param.functionName)
                             .then(function(policy) {
                                 if(policy == null) return null;
