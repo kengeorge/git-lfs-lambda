@@ -13,7 +13,6 @@ const qutils = require('./qutils.js');
 const filter = qutils.filter;
 const forEach = qutils.forEach;
 const firstOrDefault = qutils.firstOrDefault;
-const read = qutils.read;
 
 exports.deploy = deploy;
 exports.remove = remove;
@@ -40,7 +39,7 @@ function deploy(functionName) {
 function getFunction(functionName) {
     return lambda.listFunctions({}).promise()
 
-        .then(read('Functions'))
+        .get('Functions')
         .then(filter(function(f) {
             return f.FunctionName == functionName;
         }))
@@ -50,7 +49,7 @@ function getFunction(functionName) {
 
 function getPolicy(functionName) {
     return lambda.getPolicy({FunctionName: functionName}).promise()
-        .then(read('Policy'))
+        .get('Policy')
         .then(JSON.parse)
         .catch(function(err) {
             return null;

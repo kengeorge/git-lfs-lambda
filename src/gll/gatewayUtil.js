@@ -4,7 +4,6 @@ const fs = require('fs');
 const format = require('util').format;
 
 const qutils = require('./qutils.js')
-const read = qutils.read;
 const filter = qutils.filter;
 
 const gll = require('./base.js');
@@ -27,7 +26,7 @@ function getResources(api) {
         embed: ["methods"],
     }
     return gateway.getResources(params).promise()
-        .then(read('items'))
+        .get('items')
     ;
 }
 
@@ -42,9 +41,9 @@ function getApiSpec(api) {
         }
     };
     return gateway.getExport(params).promise()
-        .then(read('body'))
+        .get('body')
         .then(JSON.parse)
-        ;
+    ;
 }
 
 function getIntegration(api){
@@ -60,14 +59,12 @@ function getIntegration(api){
 }
 
 function getFirstApi(apiName) {
-    return getApis(apiName)
-        .then(read('0'))
-        ;
+    return getApis(apiName).get(0);
 }
 
 function getApis(apiName) {
     return gateway.getRestApis({}).promise()
-        .then(read('items'))
+        .get('items')
         .then(filter(function (api) {
             return api.name == apiName;
         }))

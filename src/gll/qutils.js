@@ -35,26 +35,18 @@ exports.forEach = function(callFunc) {
     };
 };
 
-exports.read = function(fieldName) {
-    if(arguments.length > 1) {
-        var varArgs = Array.from(arguments);
-        return function(input) {
-            return Q.fcall(function () {
-                var ret = {};
-                for(var i = 0; i < varArgs.length; i++) {
-                    var name = varArgs[i];
-                    ret[name] = input[name];
-                }
-                return ret;
-            });
-        };
-    }
-
+exports.pull = function(fieldName) {
+    var varArgs = Array.from(arguments);
     return function (input) {
         return Q.fcall(function () {
-            return input[fieldName];
+            var ret = {};
+            for (var i = 0; i < varArgs.length; i++) {
+                var name = varArgs[i];
+                ret[name] = input[name];
+            }
+            return ret;
         });
-    }
+    };
 };
 
 exports.print = function(message) {

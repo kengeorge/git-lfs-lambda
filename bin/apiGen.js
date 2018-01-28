@@ -13,14 +13,12 @@ const pretty = gll.pretty;
 const paths = gll.paths;
 
 const qutils = require('../src/gll/qutils.js');
-const promiseFor = qutils.promiseFor;
 const flatten = qutils.flatten;
+const pull = qutils.pull;
 const filter = qutils.filter;
-const removeNulls = qutils.removeNulls;
 const forEach = qutils.forEach;
 const qify = qutils.qify;
 const print = qutils.print;
-const read = qutils.read;
 const populate = qutils.populate;
 
 program.version(gll.projectConfig.version);
@@ -99,7 +97,7 @@ program
             .then(populate('permissions', function(instance) {
                 return gateway
                     .getResources(instance.apiObj)
-                    .then(forEach(read('path', 'resourceMethods')))
+                    .then(forEach(pull('path', 'resourceMethods')))
                     .then(filter(function(pair) { return pair.resourceMethods; }))
                     .then(forEach(function(pair) {
                         var ret = [];
