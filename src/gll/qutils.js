@@ -58,6 +58,29 @@ exports.print = function(message) {
     };
 };
 
+exports.map = function(mapping){
+    return function(input) {
+        var ret = {};
+        for(var mapKey in mapping) {
+            var mapVal = mapping[mapKey];
+            ret[mapKey] = input[mapVal];
+        }
+        return ret;
+    };
+};
+
+exports.list = function() {
+    var fieldNames = Array.from(arguments);
+    return function(input) {
+        var ret = [];
+        for(var i in fieldNames) {
+            var fieldName = fieldNames[i];
+            ret.push(input[fieldName]);
+        }
+        return ret;
+    };
+};
+
 exports.populate = function(fieldName, handlerFunc) {
     return function (input) {
         return handlerFunc(input)
@@ -66,12 +89,6 @@ exports.populate = function(fieldName, handlerFunc) {
                 return input;
             });
     };
-};
-
-exports.ret = function(input) {
-    return function() {
-        return input;
-    }
 };
 
 exports.filter = function(filterFunc) {

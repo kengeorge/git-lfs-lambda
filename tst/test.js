@@ -36,10 +36,13 @@ program
 */
 
 program
-    .command('test <repoName> <resource>')
+    .command('test <repoName> <resource> [method]')
     .description("Call API Gateway's test method on the batch resource.")
-    .action(function(repoName, options) {
-        return test.batch(repoName)
+    .action(function(repoName, resource, method, options) {
+        if(!method) method = "POST";
+        return test
+            .batch(repoName, method)
+            .tap(log)
             .done();
     })
 ;

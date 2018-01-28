@@ -20,9 +20,9 @@ exports.createFromSpec = createFromSpec;
 exports.remove = remove;
 exports.deploy = deploy;
 
-function getResources(api) {
+function getResources(apiId) {
     var params = {
-        restApiId: api.id,
+        restApiId: apiId,
         embed: ["methods"],
     }
     return gateway.getResources(params).promise()
@@ -75,10 +75,10 @@ function remove(api) {
     return gateway.deleteRestApi({restApiId: api.id}).promise();
 }
 
-function testInvokeMethod(api, resource, method, payload){
+function testInvokeMethod(apiId, resourceId, method, payload){
     var params = {
-        restApiId: api.id,
-        resourceId: resource.id,
+        restApiId: apiId,
+        resourceId: resourceId,
         httpMethod: method,
         body: JSON.stringify(payload),
         headers: {

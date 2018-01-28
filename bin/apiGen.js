@@ -96,7 +96,7 @@ program
             .then(print('Setting gateway permissions to lambda functions...'))
             .then(populate('permissions', function(instance) {
                 return gateway
-                    .getResources(instance.apiObj)
+                    .getResources(instance.apiObj.id)
                     .then(forEach(pull('path', 'resourceMethods')))
                     .then(filter(function(pair) { return pair.resourceMethods; }))
                     .then(forEach(function(pair) {

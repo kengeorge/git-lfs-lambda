@@ -66,5 +66,6 @@ module.exports = {
     },
     configuredAWS: AWS,
     projectConfig: projectConfig,
+    apiConfig: apiConfig
 };
 
