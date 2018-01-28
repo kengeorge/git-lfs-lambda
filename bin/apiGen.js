@@ -179,27 +179,6 @@ program
     })
 ;
 
-function deployAllFunctions() {
-    return getAllFunctions()
-        .then(forEach(function (functionName) {
-            //return lambda.deploy(functionName)
-            return Q.fcall(function () { return {FunctionName: functionName, FunctionArn: "dry run"};
-                })
-                .then(function (result) {
-                    return format("Function [%s] deployed as [%s]", result.FunctionName, result.FunctionArn);
-                })
-                .catch(function (err) {
-                    return format("Could not deploy function %s: [%s]", functionName, err);
-                })
-                ;
-        }))
-        .then(function (results) {
-            log("Function deployment results: %s", pretty(results));
-        })
-        ;
-}
-
-
 program
     .command('remove-function [functionNames...]')
     .description('Remove specified function(s) from Lambda account.')
@@ -225,9 +204,10 @@ program
 ;
 
 program
-    .command('deploy-functions')
+    .command('deploy-functions [functionNames]')
     .description('Deploy functions to Lambda account.')
-    .action(function() {
+    .option('-a, --all', 'Deploy all managed functions.')
+    .action(function(functionNames, options) {
         var list = options.all ? getAllFunctions() : qify(functionNames);
         list
             .then(forEach(function (functionName) {
