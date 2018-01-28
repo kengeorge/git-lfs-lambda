@@ -64,10 +64,6 @@ exports.peek = function(input) {
     });
 };
 
-exports.output = function(input) {
-    gll.log(gll.pretty(input));
-};
-
 exports.print = function(message) {
     return function(input) {
         gll.log(gll.pretty(message));
@@ -147,14 +143,3 @@ function flatten(items){
     }
     return ret;
 }
-
-exports.passTo = function(){
-    var varArgs = Array.from(arguments);
-    return function() {
-        var func = varArgs.shift();
-        var theseArgs = Array.from(arguments);
-        var all = theseArgs.concat(varArgs);
-        all.unshift(func);
-        return Q.fcall.apply(this, all);
-    };
-};

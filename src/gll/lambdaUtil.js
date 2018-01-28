@@ -12,7 +12,6 @@ const projectConfig = gll.projectConfig;
 const qutils = require('./qutils.js');
 const filter = qutils.filter;
 const forEach = qutils.forEach;
-const passTo = qutils.passTo;
 const firstOrDefault = qutils.firstOrDefault;
 const read = qutils.read;
 
@@ -52,7 +51,7 @@ function getFunction(functionName) {
 function getPolicy(functionName) {
     return lambda.getPolicy({FunctionName: functionName}).promise()
         .then(read('Policy'))
-        .then(passTo(JSON.parse))
+        .then(JSON.parse)
         .catch(function(err) {
             return null;
         })

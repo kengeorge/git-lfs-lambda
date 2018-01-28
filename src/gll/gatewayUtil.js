@@ -5,7 +5,6 @@ const format = require('util').format;
 
 const qutils = require('./qutils.js')
 const read = qutils.read;
-const passTo = qutils.passTo;
 const filter = qutils.filter;
 
 const gll = require('./base.js');
@@ -44,7 +43,7 @@ function getApiSpec(api) {
     };
     return gateway.getExport(params).promise()
         .then(read('body'))
-        .then(passTo(JSON.parse))
+        .then(JSON.parse)
         ;
 }
 
@@ -56,7 +55,7 @@ function getIntegration(api){
 
     };
     return gateway.getIntegration(params).promise()
-        .then(passTo(JSON.parse))
+        .then(JSON.parse)
     ;
 }
 

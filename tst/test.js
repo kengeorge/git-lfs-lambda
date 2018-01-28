@@ -4,7 +4,6 @@ const format = require('util').format;
 
 const qutils = require('../src/gll/qutils.js');
 const read = qutils.read;
-const passTo = qutils.passTo;
 
 const test = require('./util/testUtil.js');
 const gll = require('../src/gll/base.js');
@@ -25,7 +24,7 @@ program
         test.gateway(apiName, resourcePath, method, lfs.locks.create.payload)
             .then(qutils.peek)
             .then(read('body'))
-            .then(passTo(JSON.parse))
+            .then(JSON.parse)
             .then(function(response){
                 log("Test %s call to %s/ROOT%s with payload\n%s",
                     method, apiName, resourcePath, pretty(lfs.locks.create.payload));

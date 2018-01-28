@@ -13,7 +13,6 @@ const pretty = gll.pretty;
 const paths = gll.paths;
 
 const qutils = require('../src/gll/qutils.js');
-const passTo = qutils.passTo;
 const promiseFor = qutils.promiseFor;
 const flatten = qutils.flatten;
 const filter = qutils.filter;
@@ -34,7 +33,7 @@ function getAllFunctions(){
 function configure(repoName) {
     return Q
         .nfcall(fs.readFile, "./apiConfig.json")
-        .then(passTo(JSON.parse))
+        .then(JSON.parse)
         .then(function(apiConfig) {
             apiConfig.apiName = format('%s%s', apiConfig.repoApiPrefix, repoName);
             apiConfig.repoName = repoName;
@@ -57,7 +56,7 @@ program
 
         configure(repoName)
 
-            .then(print('Deploying functions...'))
+            .tap(log('Deploying functions...'))
             .then(populate('lambdaFunctions', function(instance) {
                 return getAllFunctions()
                     .then(forEach(lambda.deploy))
@@ -82,8 +81,10 @@ program
             .then(print('Compiling API spec...'))
             .then(populate('apiObj', function(instance) {
                 return readTemplate()
-                    .then(passTo(replace, instance))
-                    .then(passTo(JSON.parse))
+                    .then(function(text) {
+                        return replace(text, instance);
+                    })
+                    .then(JSON.parse)
                     .then(gateway.createFromSpec)
                     ;
             }))
@@ -153,8 +154,8 @@ program
                         return lambda.addInvokePermission(param.functionName, param.sourceArn, param.sid);
                     }))
             }))
-            .then(peek)
-            .then(print("API Deployed!"))
+            //.then(peek)
+            //.then(print("API Deployed!"))
             .done();
     })
 ;
@@ -179,7 +180,6 @@ program
             .then(peek)
             //.then(forEach(read('Policy')))
             //.then(peek)
-            //.then(passTo(JSON.parse))
             //.then(peek)
             .done();
         /*

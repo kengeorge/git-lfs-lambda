@@ -8,7 +8,6 @@ const qutils = require("../../src/gll/qutils.js");
 const output = qutils.output;
 const read = qutils.read;
 const filter = qutils.filter;
-const passTo = qutils.passTo;
 
 const gll = require("../../src/gll/base.js");
 const projectConfig = gll.projectConfig;
@@ -18,7 +17,7 @@ const gateway = require("../../src/gll/gatewayUtil.js");
 function getConfig(repoName) {
     return Q
         .nfcall(fs.readFile, "./apiConfig.json")
-        .then(passTo(JSON.parse))
+        .then(JSON.parse)
         .then(function(apiConfig) {
             apiConfig.apiName = format('%s%s', apiConfig.repoApiPrefix, repoName);
             apiConfig.repoName = repoName;
@@ -73,7 +72,7 @@ exports.batch = function(repoName) {
         .get('api')
         .tap(output)
         //.then(qutils.peek)
-        .then(function() { throw new Error("STOP");})
+        .thenReject("Becuase I want to")
         .then(gateway.getResources)
         .then(filter(function(item) { return item.path == resourcePath; }))
         .then(qutils.firstOrDefault)
