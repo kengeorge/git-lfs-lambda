@@ -51,6 +51,10 @@ program
     .description('Deploy a new git-lfs-lambda api based on apiConfig.json')
     .action(function(repoName, options) {
 
+
+
+
+        return;
         configure(repoName)
 
             .then(print("Checking S3 bucket..."))
