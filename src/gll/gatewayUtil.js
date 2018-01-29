@@ -1,13 +1,10 @@
 const Q = require('Q');
 Q.longStackSupport = true;
-const fs = require('fs');
-const format = require('util').format;
 
-const qutils = require('./qutils.js')
+const qutils = require('./qutils.js');
 const filter = qutils.filter;
 
 const gll = require('./base.js');
-const projectConfig = gll.projectConfig;
 const gateway = new gll.configuredAWS.APIGateway();
 
 exports.getApis = getApis;

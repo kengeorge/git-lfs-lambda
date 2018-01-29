@@ -5,12 +5,13 @@ const program = require('commander');
 const fs = require('fs');
 const lambda = require('../src/gll/lambdaUtil.js');
 const gateway = require('../src/gll/gatewayUtil.js');
+const s3 = require('../src/gll/s3Util.js');
 const format = require('util').format;
 
 const gll = require('../src/gll/base.js');
 const log = gll.log;
 const pretty = gll.pretty;
-const paths = gll.paths;
+const paths = require('../src/gll/paths.js')
 
 const qutils = require('../src/gll/qutils.js');
 const flatten = qutils.flatten;
@@ -30,8 +31,9 @@ function getAllFunctions(){
 function configure(repoName) {
     return Q(gll.apiConfig)
         .then(function(apiConfig) {
-            apiConfig.apiName = format('%s%s', apiConfig.repoApiPrefix, repoName);
             apiConfig.repoName = repoName;
+            apiConfig.apiName = paths.apiNameForRepo(repoName);
+            apiConfig.bucketName = paths.bucketNameForRepo(repoName);
             return apiConfig;
         })
     ;
@@ -50,6 +52,16 @@ program
     .action(function(repoName, options) {
 
         configure(repoName)
+
+            .then(print("Checking S3 bucket..."))
+            .then(decorate('s3bucket', function(instance){
+                return Q(instance)
+                    .get('bucketName')
+                    .tap(log)
+                    .then(s3.getOrCreateBucket)
+                    .tap(log)
+                ;
+            }))
 
             .then(print('Deploying functions...'))
             .then(decorate('lambdaFunctions', function(instance) {
@@ -149,7 +161,8 @@ program
                         return lambda.addInvokePermission(param.functionName, param.sourceArn, param.sid);
                     }))
             }))
-            .tap(log)
+
+
             .then(print("API Deployed!"))
             .done();
     })

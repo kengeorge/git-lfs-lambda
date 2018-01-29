@@ -6,12 +6,11 @@ const format = require('util').format;
 const gll = require("./base.js");
 const log = gll.log;
 const lambda = new gll.configuredAWS.Lambda();
-const paths = gll.paths;
+const paths = require('./paths.js');
 const projectConfig = gll.projectConfig;
 
 const qutils = require('./qutils.js');
 const filter = qutils.filter;
-const forEach = qutils.forEach;
 const firstOrDefault = qutils.firstOrDefault;
 
 exports.deploy = deploy;
