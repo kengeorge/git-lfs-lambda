@@ -22,15 +22,18 @@ exports.listBuckets = function() {
 };
 
 exports.getOrCreateBucket = function(bucketName) {
-    var params = {
-        Bucket: bucketName,
-    };
-    return s3.getBucketAcl(params).promise()
+    return s3.getBucketAcl({Bucket: bucketName}).promise()
         .catch(function (err) {
-            gll.log("Response: ", err);
-            gll.log("Could not find bucket %s, creating...", bucketName);
-            params.ACL = 'private';
-            return s3.createBucket(params).promise();
+            return createBucket(bucketName);
         })
     ;
+};
+
+
+exports.createBucket = function(bucketName) {
+    var params = {
+        Bucket: bucketName,
+        ACL: 'private',
+    };
+    return s3.createBucket(params).promise();
 };

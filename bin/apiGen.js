@@ -51,7 +51,19 @@ program
     .description('Deploy a new git-lfs-lambda api based on apiConfig.json')
     .action(function(repoName, options) {
 
-
+        configure(repoName)
+            .then(print("Creating S3 bucket..."))
+            .tap(function(instance) {
+                return Q(instance)
+                    .get('bucketName')
+                    .then(s3.createBucket)
+                    .catch(function (err) {
+                        if (err.statusCode != 409) throw new Error(err);
+                        log("Bucket [%s] already exists...", instance.bucketName)
+                    })
+                ;
+            })
+            .done();
 
 
         return;
