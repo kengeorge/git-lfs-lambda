@@ -19,6 +19,7 @@ exports.getFunction = getFunction;
 exports.addInvokePermission = addInvokePermission;
 exports.removePermission = removePermission;
 exports.getPolicy = getPolicy;
+exports.zip = zip;
 
 function deploy(functionName) {
     return verify(functionName)
@@ -97,6 +98,7 @@ function addInvokePermission(functionName, sourceArn, statementId) {
 }
 
 function zip(functionName) {
+    log("zipping %s", functionName)
     var deferred = Q.defer();
 
 
@@ -136,12 +138,7 @@ function zip(functionName) {
 }
 
 function readZipBits(zipFile) {
-    var deferred = Q.defer();
-    fs.readFile(zipFile, function(err, data){
-        if(err) deferred.reject(new Error(err));
-        else deferred.resolve(data);
-    });
-    return deferred.promise;
+    return Q.nfcall(fs.readFile, zipFile);
 }
 
 function checkForExisting(functionName) {

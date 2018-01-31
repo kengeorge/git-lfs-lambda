@@ -29,6 +29,15 @@ exports.getOrCreateBucket = function(bucketName) {
     ;
 };
 
+exports.put = function(bucketName, fileName, fileBits) {
+    var params = {
+        Bucket: bucketName,
+        Key: fileName,
+        ACL: 'private',
+        Body: fileBits
+    };
+    return s3.putObject(params).promise();
+};
 
 exports.createBucket = function(bucketName) {
     var params = {

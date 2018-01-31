@@ -8,28 +8,23 @@ Resources:
     Properties:
       Handler: batch.handler
       Runtime: nodejs6.10
-      CodeUri: .
+      CodeUri: ${batch_uri}
       Description: ''
       MemorySize: 128
       Timeout: 3
       Role: 'arn:aws:iam::548425624042:role/service-role/git-lfs-service'
       Events:
-        Api1:
+        Api:
           Type: Api
           Properties:
-            Path: /myrepo.git/info/lfs/objects/batch
-            Method: POST
-        Api2:
-          Type: Api
-          Properties:
-            Path: /autoRepo.git/info/lfs/objects/batch
+            Path: /${repo_name}.git/info/lfs/objects/batch
             Method: POST
   verifyLocks:
     Type: 'AWS::Serverless::Function'
     Properties:
       Handler: verifyLocks.handler
       Runtime: nodejs6.10
-      CodeUri: .
+      CodeUri: ${verifyLocks_uri}
       Description: ''
       MemorySize: 128
       Timeout: 3
@@ -38,19 +33,14 @@ Resources:
         Api1:
           Type: Api
           Properties:
-            Path: /autoRepo.git/info/lfs/locks/verify
-            Method: POST
-        Api2:
-          Type: Api
-          Properties:
-            Path: /myrepo.git/info/lfs/locks/verify
+            Path: /${repo_name}.git/info/lfs/locks/verify
             Method: POST
   listLocks:
     Type: 'AWS::Serverless::Function'
     Properties:
       Handler: listLocks.handler
       Runtime: nodejs6.10
-      CodeUri: .
+      CodeUri: ${listLocks_uri}
       Description: ''
       MemorySize: 128
       Timeout: 3
@@ -59,35 +49,30 @@ Resources:
         Api1:
           Type: Api
           Properties:
-            Path: /autoRepo.git/info/lfs/locks
+            Path: /${repo_name}.git/info/lfs/locks
             Method: GET
   createLock:
     Type: 'AWS::Serverless::Function'
     Properties:
       Handler: createLock.handler
       Runtime: nodejs6.10
-      CodeUri: .
+      CodeUri: ${createLock_uri}
       Description: ''
       MemorySize: 128
       Timeout: 3
       Role: 'arn:aws:iam::548425624042:role/service-role/git-lfs-service'
       Events:
-        Api1:
+        Api:
           Type: Api
           Properties:
-            Path: /myrepo.git/info/lfs/locks
-            Method: POST
-        Api2:
-          Type: Api
-          Properties:
-            Path: /autoRepo.git/info/lfs/locks
+            Path: /${repo_name}.git/info/lfs/locks
             Method: POST
   deleteLock:
     Type: 'AWS::Serverless::Function'
     Properties:
       Handler: deleteLock.handler
       Runtime: nodejs6.10
-      CodeUri: .
+      CodeUri: ${deleteLock_uri}
       Description: ''
       MemorySize: 128
       Timeout: 3
@@ -96,11 +81,6 @@ Resources:
         Api1:
           Type: Api
           Properties:
-            Path: '/autoRepo.git/info/lfs/locks/{id}/unlock'
-            Method: POST
-        Api2:
-          Type: Api
-          Properties:
-            Path: '/myrepo.git/info/lfs/locks/{id}/unlock'
+            Path: '/${repo_name}.git/info/lfs/locks/{id}/unlock'
             Method: POST
 

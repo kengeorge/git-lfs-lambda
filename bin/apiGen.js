@@ -15,6 +15,8 @@ const paths = require('../src/gll/paths.js')
 
 const qutils = require('../src/gll/qutils.js');
 const flatten = qutils.flatten;
+const keyMap = qutils.keyMap;
+const using = qutils.using;
 const pull = qutils.pull;
 const filter = qutils.filter;
 const forEach = qutils.forEach;
@@ -37,6 +39,10 @@ function configure(repoName) {
             return apiConfig;
         })
     ;
+}
+
+function fuckingDoIt(name, file) {
+    return Q.nfcall(fs.readFile, file, 'utf-8');
 }
 
 /**
@@ -63,6 +69,25 @@ program
                     })
                 ;
             })
+
+            .tap(decorate('lambdaFunctions', function(instance){
+                return getAllFunctions()
+                    .then(keyMap(lambda.zip))
+                    .then(keyMap(function(name, zipFile) {
+                        //super not sure why I can't async this via keymap
+                        return Q.nfcall(fs.readFile, zipFile);
+                    }))
+                    .then(keyMap(function(name, bits) {
+                        return s3.put(instance.bucketName, name, bits)
+                            .then(function() {
+                                return format("s3://%s/%s", instance.bucketName, name);
+                            });
+                    }))
+                ;
+            }))
+            .then(print('======== RESULT =========='))
+            .tap(log)
+            .then(print('========== END ==========='))
             .done();
 
 

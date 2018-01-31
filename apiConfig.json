@@ -3,7 +3,7 @@
   "stage": "development",
   "hostname": "localhost",
   "awsRegion": "us-west-2",
-  "bucketPrefix": "gif-lfs-lambda-",
+  "bucketPrefix": "git-lfs-lambda-",
 
 
   "accountNumber": "548425624042"
