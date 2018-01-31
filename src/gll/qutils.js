@@ -20,6 +20,22 @@ exports.forEachField = function(callFunc){
     };
 };
 
+/**
+ * Takes the input and calls the given function (passed as the first argument)
+ * with any additional arguments also passed to he function AFTER the input argument.
+ * i.e. {one: 1, two: 2} -> .then(passTo(func, 'three')) -> calls func({one: 1, two: 2}, 'three')
+ *
+ * @returns {Function}
+ */
+exports.passTo = function(){
+    var varArgs = Array.from(arguments);
+    var callFunc = varArgs.shift();
+    return function(input) {
+        varArgs.unshift(input);
+        return callFunc.apply(undefined, varArgs);
+    };
+};
+
 function makeCall(func, k, v) {
     return Q.fcall(function() {
         return func(k, v);

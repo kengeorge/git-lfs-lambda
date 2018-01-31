@@ -58,7 +58,7 @@ program
     .action(function(repoName, options) {
 
         configure(repoName)
-            .then(print("Creating S3 bucket..."))
+            .then(print("Creating S3 bucket for deployment..."))
             .tap(function(instance) {
                 return Q(instance)
                     .get('bucketName')
@@ -85,9 +85,17 @@ program
                     }))
                 ;
             }))
-            .then(print('======== RESULT =========='))
-            .tap(log)
-            .then(print('========== END ==========='))
+
+            .tap(function(instance) {
+                //TODO fix call
+                return readTemplate()
+                    .then(qutils.passTo(replace, instance))
+                    .then(print('======== RESULT =========='))
+                    .tap(log)
+                    .then(print('========== END ==========='))
+                    .thenReject("Seriously, done")
+            })
+
             .done();
 
 
@@ -332,10 +340,11 @@ if(process.argv.slice(2).length <= 0) {
 }
 
 function readTemplate() {
-    return Q.nfcall(fs.readFile, "./api_template.json", "utf-8");
+    return Q.nfcall(fs.readFile, "./template.yaml", "utf-8");
 }
 
 function replace(text, placeholderData) {
+    log("REPLACING WITH %s", placeholderData);
     while(match = text.match(/\$\{(\w+)\}/)) {
         var token = match[0];
         var symbol = match[1];
