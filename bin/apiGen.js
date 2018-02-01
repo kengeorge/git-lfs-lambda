@@ -3,9 +3,6 @@ const Q = require('Q');
 Q.longStackSupport = true;
 const program = require('commander');
 const fs = require('fs');
-const lambda = require('../src/gll/lambdaUtil.js');
-const gateway = require('../src/gll/gatewayUtil.js');
-const s3 = require('../src/gll/s3Util.js');
 const format = require('util').format;
 
 const gll = require('../src/gll/base.js');
@@ -15,14 +12,19 @@ const paths = require('../src/gll/paths.js')
 
 const qutils = require('../src/gll/qutils.js');
 const flatten = qutils.flatten;
+const passTo = qutils.passTo;
 const keyMap = qutils.keyMap;
-const using = qutils.using;
 const pull = qutils.pull;
 const filter = qutils.filter;
 const forEach = qutils.forEach;
 const qify = qutils.qify;
 const print = qutils.print;
 const decorate = qutils.decorate;
+
+const lambda = require('../src/gll/lambdaUtil.js');
+const gateway = require('../src/gll/gatewayUtil.js');
+const s3 = require('../src/gll/s3Util.js');
+const cloud = require('../src/gll/cloudUtil.js');
 
 program.version(gll.projectConfig.version);
 
@@ -36,6 +38,8 @@ function configure(repoName) {
             apiConfig.repoName = repoName;
             apiConfig.apiName = paths.apiNameForRepo(repoName);
             apiConfig.bucketName = paths.bucketNameForRepo(repoName);
+            apiConfig.stackName = 'gllCloudStack';
+            apiConfig.changeSetName = 'gllCloudChangeSet';
             return apiConfig;
         })
     ;
@@ -74,9 +78,9 @@ program
                 return getAllFunctions()
                     .then(keyMap(lambda.zip))
                     .then(keyMap(function(name, zipFile) {
-                        //super not sure why I can't async this via keymap
                         return Q.nfcall(fs.readFile, zipFile);
                     }))
+
                     .then(keyMap(function(name, bits) {
                         return s3.put(instance.bucketName, name, bits)
                             .then(function() {
@@ -86,15 +90,25 @@ program
                 ;
             }))
 
-            .tap(function(instance) {
-                //TODO fix call
+            .then(function(instance) {
                 return readTemplate()
-                    .then(qutils.passTo(replace, instance))
-                    .then(print('======== RESULT =========='))
-                    .tap(log)
-                    .then(print('========== END ==========='))
-                    .thenReject("Seriously, done")
+                    //some fields in SAM template can't take parameters, so doing it myself
+                    .then(passTo(replace, instance))
+                    .then(print("Creating change set..."))
+                    .then(passTo(cloud.createChangeSet, instance.bucketName, instance.repoName))
+                    .then(print("Executing change set..."))
+                    .then(cloud.executeChangeSet)
+                    //TODO left off here - looks like it's running, but conflicting
+                //          with the existing lambda functions (which is expected)
+                //          probably want to deploy a function per stack so SAM can
+                //          do all the most restrictive IAM mojo.
+                //return cloud.waitFor('stackCreateComplete', {StackName: response.StackId}).promise();
             })
+
+            .then(print('======== RESULT =========='))
+            .tap(log)
+            .then(print('========== END ==========='))
+            .thenReject("Seriously, done")
 
             .done();
 
@@ -344,12 +358,11 @@ function readTemplate() {
 }
 
 function replace(text, placeholderData) {
-    log("REPLACING WITH %s", placeholderData);
-    while(match = text.match(/\$\{(\w+)\}/)) {
+    while (match = text.match(/\$\{(\w+)\}/)) {
         var token = match[0];
         var symbol = match[1];
         var data = placeholderData[symbol];
-        if(!data) throw new Error(format("Unknown token: >>> %s <<<", token));
+        if (!data) throw new Error(format("Unknown token: >>> %s <<<", token));
         text = text.replace(token, data);
     }
     return text;
