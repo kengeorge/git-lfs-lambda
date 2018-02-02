@@ -95,6 +95,15 @@ program
     })
 ;
 
+program
+    .command('delete-stack <stackName>')
+    .description('Fetch information on the specified function.')
+    .action(function(stackName, options) {
+        cloud.deleteStack(stackName)
+            .tap(log)
+            .done();
+    });
+
 //Dev use
 program
     .command('get-policies [functionNames...]')

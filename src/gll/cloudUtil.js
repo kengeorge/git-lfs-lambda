@@ -44,3 +44,10 @@ exports.executeChangeSet = function(changeSetResponse){
         });
 };
 
+exports.deleteStack = function(stackName) {
+    var params = {
+        StackName: stackName
+    };
+    return cloud.deleteStack(params).promise();
+};
+
