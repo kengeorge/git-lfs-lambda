@@ -42,13 +42,6 @@ function configure(repoName) {
     ;
 }
 
-/**
- * This way-too-big process results in:
- * 1) All lambda functions being deployed (or updated) to the AWS region.
- * 2) An APIGateway API with the GIT-LFS specified structure and prefixed with the
- * requested repository name being added to the AWS region.
- * 3) Permission added on the API method calls to allow them to invoke the lambda functions.
- */
 program
     .command('generate <repoName>')
     .description('Deploy a new git-lfs-lambda api based on apiConfig.json')
@@ -91,11 +84,6 @@ program
                     .then(passTo(cloud.createChangeSet, instance.bucketName, instance.repoName))
                     .then(print("Executing change set..."))
                     .then(cloud.executeChangeSet)
-                    //TODO left off here - looks like it's running, but conflicting
-                //          with the existing lambda functions (which is expected)
-                //          probably want to deploy a function per stack so SAM can
-                //          do all the most restrictive IAM mojo.
-                //return cloud.waitFor('stackCreateComplete', {StackName: response.StackId}).promise();
             })
 
             .then(print('======== RESULT =========='))

@@ -14,7 +14,7 @@ Resources:
   batch:
     Type: 'AWS::Serverless::Function'
     Properties:
-      FunctionName: 'batch'
+      FunctionName: '${repoName}-batch'
       Handler: batch.handler
       CodeUri:
         Bucket: !Ref deploymentBucketName
@@ -28,7 +28,7 @@ Resources:
   verifyLocks:
     Type: 'AWS::Serverless::Function'
     Properties:
-      FunctionName: 'verifyLocks'
+      FunctionName: '${repoName}-verifyLocks'
       Handler: verifyLocks.handler
       CodeUri:
         Bucket: !Ref deploymentBucketName
@@ -42,7 +42,7 @@ Resources:
   listLocks:
     Type: 'AWS::Serverless::Function'
     Properties:
-      FunctionName: 'listLocks'
+      FunctionName: '${repoName}-listLocks'
       Handler: listLocks.handler
       CodeUri:
         Bucket: !Ref deploymentBucketName
@@ -56,7 +56,7 @@ Resources:
   createLock:
     Type: 'AWS::Serverless::Function'
     Properties:
-      FunctionName: 'createLock'
+      FunctionName: '${repoName}-createLock'
       Handler: createLock.handler
       CodeUri:
         Bucket: !Ref deploymentBucketName
@@ -70,7 +70,7 @@ Resources:
   deleteLock:
     Type: 'AWS::Serverless::Function'
     Properties:
-      FunctionName: 'deleteLock'
+      FunctionName: '${repoName}-deleteLock'
       Handler: deleteLock.handler
       CodeUri:
         Bucket: !Ref deploymentBucketName
