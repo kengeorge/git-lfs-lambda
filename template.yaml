@@ -2,10 +2,6 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: Serverless AWS implementation of the GIT-LFS server spec.
 
-Globals:
-  Function:
-    Runtime: nodejs6.10
-
 Parameters:
   deploymentBucketName:
     Type: String
@@ -16,6 +12,7 @@ Resources:
     Properties:
       FunctionName: '${repoName}-batch'
       Handler: batch.handler
+      Runtime: nodejs6.10
       CodeUri:
         Bucket: !Ref deploymentBucketName
         Key: batch
@@ -30,6 +27,7 @@ Resources:
     Properties:
       FunctionName: '${repoName}-verifyLocks'
       Handler: verifyLocks.handler
+      Runtime: nodejs6.10
       CodeUri:
         Bucket: !Ref deploymentBucketName
         Key: verifyLocks
@@ -37,13 +35,14 @@ Resources:
         Api:
           Type: Api
           Properties:
-            Path: ${repoName}.git/info/lfs/locks/verify
+            Path: /${repoName}.git/info/lfs/locks/verify
             Method: POST
   listLocks:
     Type: 'AWS::Serverless::Function'
     Properties:
       FunctionName: '${repoName}-listLocks'
       Handler: listLocks.handler
+      Runtime: nodejs6.10
       CodeUri:
         Bucket: !Ref deploymentBucketName
         Key: listLocks
@@ -58,6 +57,7 @@ Resources:
     Properties:
       FunctionName: '${repoName}-createLock'
       Handler: createLock.handler
+      Runtime: nodejs6.10
       CodeUri:
         Bucket: !Ref deploymentBucketName
         Key: createLock
@@ -72,6 +72,7 @@ Resources:
     Properties:
       FunctionName: '${repoName}-deleteLock'
       Handler: deleteLock.handler
+      Runtime: nodejs6.10
       CodeUri:
         Bucket: !Ref deploymentBucketName
         Key: deleteLock
