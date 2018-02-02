@@ -11,11 +11,8 @@ const pretty = gll.pretty;
 const paths = require('../src/gll/paths.js')
 
 const qutils = require('../src/gll/qutils.js');
-const flatten = qutils.flatten;
 const passTo = qutils.passTo;
 const keyMap = qutils.keyMap;
-const pull = qutils.pull;
-const filter = qutils.filter;
 const forEach = qutils.forEach;
 const qify = qutils.qify;
 const print = qutils.print;
@@ -43,10 +40,6 @@ function configure(repoName) {
             return apiConfig;
         })
     ;
-}
-
-function fuckingDoIt(name, file) {
-    return Q.nfcall(fs.readFile, file, 'utf-8');
 }
 
 /**
@@ -110,123 +103,6 @@ program
             .then(print('========== END ==========='))
             .thenReject("Seriously, done")
 
-            .done();
-
-
-        return;
-        configure(repoName)
-
-            .then(print("Checking S3 bucket..."))
-            .then(decorate('s3bucket', function(instance){
-                return Q(instance)
-                    .get('bucketName')
-                    .tap(log)
-                    .then(s3.getOrCreateBucket)
-                    .tap(log)
-                ;
-            }))
-
-            .then(print('Deploying functions...'))
-            .then(decorate('lambdaFunctions', function(instance) {
-                return getAllFunctions()
-                    .then(forEach(lambda.deploy))
-                ;
-            }))
-
-            .then(print('Checking for existing API...'))
-            .tap(function(instance) {
-                return gateway
-                    .getFirstApi(instance.apiName)
-                    .tap(function(api) {
-                        if(!api) {
-                            log('%s not found.', instance.apiName);
-                            return null;
-                        }
-                        log('Detected existing instance of %s, removing...', instance.apiName);
-                        return gateway.remove(api);
-                    })
-                ;
-            })
-
-            .then(print('Compiling API spec...'))
-            .then(decorate('apiObj', function(instance) {
-                return readTemplate()
-                    .then(function(text) {
-                        return replace(text, instance);
-                    })
-                    .then(JSON.parse)
-                    .then(gateway.createFromSpec)
-                    ;
-            }))
-
-            .then(print('Deploying api...'))
-            .tap(function(instance) {
-                return gateway
-                    .deploy(instance.apiObj, instance.stage)
-                ;
-            })
-
-            .then(print('Setting gateway permissions to lambda functions...'))
-            .then(decorate('permissions', function(instance) {
-                return gateway
-                    .getResources(instance.apiObj.id)
-                    .then(forEach(pull('path', 'resourceMethods')))
-                    .then(filter(function(pair) { return pair.resourceMethods; }))
-                    .then(forEach(function(pair) {
-                        var ret = [];
-                        for(var method in pair.resourceMethods) {
-                            ret.push({
-                                path: pair.path,
-                                httpMethod: method,
-                                uri: pair.resourceMethods[method].methodIntegration.uri
-                            });
-                        }
-                        return ret;
-                    }))
-                    .then(flatten)
-                    .then(forEach(function(method) {
-                        //TODO seems weird to get names here again since we have them elsewhere in the instance context.
-                        var functionName = method.uri
-                            .match(/function:([^\s]+)\/invocations/)[1];
-                        ;
-
-                        //TODO I can *see* this arn on the APIGateway console method details page,
-                        //  but canNOT friggin' figure out where to fetch it from, so let's just reconstruct it.
-                        var sourceArn = format('arn:aws:execute-api:%s:%s:%s/*/%s%s',
-                            instance.awsRegion,
-                            instance.accountNumber,
-                            instance.apiObj.id,
-                            method.httpMethod,
-                            method.path.replace(/\{id\}/, '*')
-                        );
-
-                        const statement = "git-lfs-generated-permission";
-
-                        return {functionName: functionName, sourceArn: sourceArn, sid: statement};
-                    }))
-                    .then(forEach(decorate('existingPolicy', function(param){
-                        return lambda.getPolicy(param.functionName)
-                            .then(function(policy) {
-                                if(policy == null) return null;
-                                for(var i = 0; i < policy.Statement.length; i++) {
-                                    var s = policy.Statement[i];
-                                    if(s.Sid == param.sid) return s;
-                                }
-                                return null;
-                            })
-                    })))
-                    .tap(forEach(function(param) {
-                        if(param.existingPolicy) {
-                            return lambda.removePermission(param.functionName, param.sid);
-                        }
-                    }))
-                    .then(forEach(function(param){
-                        return lambda.addInvokePermission(param.functionName, param.sourceArn, param.sid);
-                    }))
-            }))
-
-
-            .then(print("API Deployed!"))
             .done();
     })
 ;
