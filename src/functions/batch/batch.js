@@ -2,8 +2,14 @@
 
 const format=require('util').format;
 
+//TODO send configuration / env variables
 const m = require('./common/messages.js');
 const respond = require('./common/lambdaResponse.js');
+const AWS = require('aws-sdk');
+const s3 = new AWS.S3();
+
+const repo = "cloudrepo";
+const bucket = "git-lfs-lambda-" + repo;
 
 function log() {
     var formatted = format.apply(this, Array.from(arguments).map(pretty));
@@ -37,15 +43,24 @@ function fakeResponse() {
     };
 }
 
-function handleUpload(objects) {
+function handleUpload(objects, callback) {
     for(var o in objects) {
         var file = objects[o];
-        log("Uploading %s", file);
+        var params = {
+            Bucket: bucket,
+            Key: file.oid
+        };
+        log("Uploading as %s", params);
+        s3.getSignedUrl('putObject', params,
+            function (err, url) {
+                callback(err, url);
+            });
     }
 }
 
-function handleDownload(objects) {
-
+function makeResponse() {
+    var res = {};
+    return res;
 }
 
 const transferType = "basic";
@@ -63,9 +78,14 @@ exports.handler = function(event, context, callback) {
         log("Transfer type [%s] found.", transferType);
     }
 
-    if(request.operation == "upload") handleUpload(request.objects);
-    else if(request.operation == "download") handleDownload(request.objects);
+    if(request.operation == "upload") {
+        handleUpload(request.objects, function(err, url){
+            log("URL: %s", url);
+            callback(null, respond(200, fakeResponse()));
+        });
+    } else if(request.operation == "download") {
+        throw new Error("Download not implemented.");
+    }
 
-    callback(null, respond(200, fakeResponse()));
 };
 

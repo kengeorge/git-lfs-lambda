@@ -1,5 +1,4 @@
 const path = require('path');
-const gll = require('./base.js');
 
 const format = require('util').format;
 
@@ -8,18 +7,26 @@ exports.projectRoot = function() {
     return process.cwd();
 };
 
+exports.gllRoot = function() {
+    return path.dirname(require.main.filename);
+};
+
+exports.gllPathFor = function(fileName) {
+    return path.join(exports.gllRoot(), fileName);
+};
+
 exports.deploymentPackageFor = function(functionName) {
     return path.join(
         exports.projectRoot(),
-        gll.projectConfig.outputDir,
-        format(gll.projectConfig.deploymentPackageTemplate, functionName)
+        "tmp",
+        format("deploymentPackage-%s", functionName)
     );
 };;
 
 exports.functionSourceRoot = function(){
     return path.join(
         exports.projectRoot(),
-        gll.projectConfig.sourceDir,
+        "src",
         "functions"
     );
 };
@@ -34,16 +41,16 @@ exports.sourceRootFor = function(functionName) {
 exports.commonRoot = function() {
     return path.join(
         exports.projectRoot(),
-        gll.projectConfig.sourceDir,
+        "src",
         "common"
     );
 };
 
-exports.apiNameForRepo = function(repoName) {
-    return format('%s%s', gll.apiConfig.repoApiPrefix, repoName);
+exports.apiNameForRepo = function(prefix, repoName) {
+    return format('%s%s', prefix, repoName);
 };
 
-exports.bucketNameForRepo = function(repoName) {
+exports.bucketNameForRepo = function(prefix, repoName) {
     //No upper case characters allowed in bucket names
-    return format('%s%s', gll.apiConfig.bucketPrefix, repoName).toLowerCase();
+    return format('%s%s', prefix, repoName).toLowerCase();
 };

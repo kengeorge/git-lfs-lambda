@@ -1,6 +1,6 @@
 #!/bin/bash
 
-template=template.yaml
+templateName=template.yaml
 repoName=localtest
 outDir="./tmp"
 outTemplate=$outDir/converted.yaml
@@ -14,7 +14,7 @@ if [ -d $samDir ]; then
 fi
 mkdir -p $samDir
 echo "Copying SAM template..."
-sed s/\$\{repoName\}/$repoName/g $template > $samDir/$template
+sed s/\$\{repoName\}/$repoName/g ./src/gll/$templateName > $samDir/$templateName
 
 commonOutDir=$samDir/common
 if [ -d $commonOutDir ]; then
@@ -38,5 +38,5 @@ for name in $names; do
     cp -R $funcSrcDir/ $samDir/
 done
 
-sam local start-api -t $samDir/template.yaml
+sam local start-api -t $samDir/$templateName
 

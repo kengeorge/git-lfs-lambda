@@ -1,9 +1,9 @@
 const fs = require('fs');
 const AWS = require('aws-sdk');
 const format = require('util').format;
+const paths = require('./paths.js');
 
-const projectConfig = JSON.parse(fs.readFileSync("config.json"));
-const apiConfig = JSON.parse(fs.readFileSync("apiConfig.json"));
+const apiConfig = JSON.parse(fs.readFileSync(paths.gllPathFor("apiConfig.json")));
 AWS.config.update({region: apiConfig.awsRegion});
 AWS.config.setPromisesDependency(require('Q').Promise);
 
@@ -21,7 +21,6 @@ module.exports = {
     log: log,
     pretty: pretty,
     configuredAWS: AWS,
-    projectConfig: projectConfig,
     apiConfig: apiConfig
 };
 

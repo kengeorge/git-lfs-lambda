@@ -1,6 +1,0 @@
-{
-  "functionRuntime": "nodejs6.10",
-  "deploymentPackageTemplate": "deploymentPackage-%s.zip",
-  "outputDir": "tmp",
-  "sourceDir": "src"
-}
