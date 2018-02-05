@@ -28,7 +28,13 @@ cp -R $commonDir/ $commonOutDir/
 names=`ls $funcDir`
 for name in $names; do
     funcSrcDir=$funcDir/$name
-    echo "Copying $funcSrcDir to $samDir..."
+    echo "Linked $funcSrcDir to $samDir..."
+    files=`ls $funcSrcDir`
+    ## wish this worked...
+    ## for file in $files; do
+        ## ln -s $funcSrcDir/$file $samDir/$file
+        ## cp $funcSrcDir/$file $samDir/$file
+    ## done
     cp -R $funcSrcDir/ $samDir/
 done
 
