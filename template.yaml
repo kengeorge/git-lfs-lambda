@@ -1,0 +1,83 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Serverless AWS implementation of the GIT-LFS server spec.
+
+Parameters:
+  batchUri:
+    Type: String
+  verifyLocksUri:
+    Type: String
+  listLocksUri:
+    Type: String
+  createLockUri:
+    Type: String
+  deleteLockUri:
+    Type: String
+
+Resources:
+  batch:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: '${repoName}-batch'
+      Handler: batch.handler
+      Runtime: nodejs6.10
+      CodeUri: !Ref batchUri
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /${repoName}.git/info/lfs/objects/batch
+            Method: POST
+  verifyLocks:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: '${repoName}-verifyLocks'
+      Handler: verifyLocks.handler
+      Runtime: nodejs6.10
+      CodeUri: !Ref verifyLocksUri
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /${repoName}.git/info/lfs/locks/verify
+            Method: POST
+  listLocks:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: '${repoName}-listLocks'
+      Handler: listLocks.handler
+      Runtime: nodejs6.10
+      CodeUri: !Ref listLocksUri
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /${repoName}.git/info/lfs/locks
+            Method: GET
+  createLock:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: '${repoName}-createLock'
+      Handler: createLock.handler
+      Runtime: nodejs6.10
+      CodeUri: !Ref createLockUri
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /${repoName}.git/info/lfs/locks
+            Method: POST
+  deleteLock:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: '${repoName}-deleteLock'
+      Handler: deleteLock.handler
+      Runtime: nodejs6.10
+      CodeUri: !Ref deleteLockUri
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /${repoName}.git/info/lfs/locks/{id}/unlock
+            Method: POST
+

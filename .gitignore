@@ -1,4 +1,6 @@
 deploymentPackage.zip
-node_modules/*
-.idea/*
-tmp/*
+node_modules
+.idea
+tmp
+*.ignore.*
+

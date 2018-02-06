@@ -1,7 +1,7 @@
 const Q = require('Q');
 Q.longStackSupport = true;
 
-const qutils = require('./qutils.js');
+const qutils = require('../api/common/qutils.js');
 
 const gll = require('./base.js');
 const s3 = new gll.configuredAWS.S3();

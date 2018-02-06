@@ -10,8 +10,9 @@ const log = gll.log;
 const pretty = gll.pretty;
 const paths = require('./paths.js')
 
-const qutils = require('./qutils.js');
+const qutils = require('../api/common/qutils.js');
 const passTo = qutils.passTo;
+const filter = qutils.filter;
 const keyMap = qutils.keyMap;
 const forEach = qutils.forEach;
 const qify = qutils.qify;
@@ -92,6 +93,15 @@ program
             .done();
     })
 ;
+
+program
+    .command('test')
+    .description('Fetch information on the specified function.')
+    .action(function(){
+        return s3.getUrl("git-lfs-lambda-cloudrepo", "mytest")
+            .tap(log)
+            .done();
+    });
 
 program
     .command('delete-stack <stackName>')
