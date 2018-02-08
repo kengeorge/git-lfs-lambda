@@ -1,10 +1,11 @@
 const Q = require('Q');
 Q.longStackSupport = true;
+const format = require('util').format;
+const paths = require('./paths.js')
 
 const gll = require('./base.js');
 const cloud = new gll.configuredAWS.CloudFormation();
-const format = require('util').format;
-const qutils = require('../api/common/qutils.js')
+const qutils = require(paths.commonRoot('qutils.js'));
 
 exports.createChangeSet = function(templateText, deploymentBucketName, repoName) {
     var stackName = format("git-lfs-lambda-%s-stack", repoName);

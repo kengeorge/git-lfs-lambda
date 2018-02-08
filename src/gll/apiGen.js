@@ -10,9 +10,8 @@ const log = gll.log;
 const pretty = gll.pretty;
 const paths = require('./paths.js')
 
-const qutils = require('../api/common/qutils.js');
+const qutils = require(paths.commonRoot('qutils.js'));
 const passTo = qutils.passTo;
-const filter = qutils.filter;
 const keyMap = qutils.keyMap;
 const forEach = qutils.forEach;
 const qify = qutils.qify;
@@ -27,7 +26,13 @@ const cloud = require('./cloudUtil.js');
 program.version("v0.1");
 
 function getAllFunctions(){
-    return Q.nfcall(fs.readdir, paths.functionSourceRoot());
+    return Q([
+        "batch",
+        "verifyLocks",
+        "listLocks",
+        "createLock",
+        "deleteLock",
+    ]);
 }
 
 function configure(repoName) {
@@ -78,7 +83,7 @@ program
             }))
 
             .then(function(instance) {
-                return readTemplate()
+                return Q.nfcall(fs.readFile, paths.templateFile(), "utf-8")
                     //some fields in SAM template can't take parameters, so doing it myself
                     .then(passTo(replace, instance))
                     .then(print("Creating change set..."))
@@ -87,16 +92,15 @@ program
                     .then(cloud.executeChangeSet)
             })
 
-            .then(print('======== RESULT =========='))
+            .then(print('========= RESULT =========='))
             .tap(log)
-            .then(print('========== END ==========='))
+            .then(print('========== DONE ==========='))
             .done();
-    })
-;
+    });
 
 program
-    .command('test')
-    .description('Fetch information on the specified function.')
+    .command('do')
+    .description('Does whatever I need it to do at the moment...')
     .action(function(){
         return s3.getUrl("git-lfs-lambda-cloudrepo", "mytest")
             .tap(log)
@@ -111,28 +115,6 @@ program
             .tap(log)
             .done();
     });
-
-//Dev use
-program
-    .command('get-policies [functionNames...]')
-    .description('Fetch information on the specified function.')
-    .option('-a, --all', 'Get policies for all managed functions.')
-    .action(function(functionNames, options){
-        var list = options.all ? getAllFunctions() : qify(functionNames);
-        list
-            .then(forEach(function(functionName) {
-                return lambda.getPolicy(functionName)
-                    .then(function(policy){
-                        return {
-                            name: functionName,
-                            policy: policy
-                        };
-                    })
-            }))
-            .tap(log)
-            .done();
-    })
-;
 
 program
     .command('remove-function [functionNames...]')
@@ -155,8 +137,7 @@ program
                 log("Function removal results:\n%s", pretty(results));
             })
             .done();
-    })
-;
+    });
 
 program
     .command('deploy-functions [functionNames]')
@@ -232,10 +213,6 @@ program.parse(process.argv);
 if(process.argv.slice(2).length <= 0) {
     console.log("No valid command found.")
     program.outputHelp();
-}
-
-function readTemplate() {
-    return Q.nfcall(fs.readFile, paths.gllPathFor("template.yaml"), "utf-8");
 }
 
 function replace(text, placeholderData) {

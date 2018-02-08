@@ -1,7 +1,6 @@
 'use strict';
 
-
-const format=require('util').format;
+const format = require('util').format;
 const Q = require('q');
 const AWS = require('aws-sdk');
 AWS.config.setPromisesDependency(Q.Promise);
@@ -43,7 +42,6 @@ function batchResponse(objects) {
                    };
                }))
        }))
-       .tap(log)
     ;
 }
 
@@ -70,6 +68,7 @@ function getUploadUrl(oid) {
     s3.getSignedUrl('putObject', params, function(err, data) {
         if(err) deferred.reject(new Error(err));
         else deferred.resolve(data);
+        log(data);
     });
     return deferred.promise;
 }
@@ -77,7 +76,9 @@ function getUploadUrl(oid) {
 function replyVia(callback) {
     return function(items) {
         var res = respond(200, items);
-        log("FINAL RESPONSE: %s", res);
+        log("RESPONSE ================");
+        log(res);
+        log("================ RESPONSE");
         return callback(null, res);
     };
 }
@@ -87,6 +88,11 @@ exports.handler = function(event, context, callback) {
     if(request.transfer && !request.transfer.includes(transferType)) {
         return callback(respond(422, {"Error":"Unsupported transfer type"}, null));
     }
+
+    log("REQUEST ================");
+    log(request);
+    log("================ REQUEST");
+
 
     if(request.operation == "upload") {
         return Q(request.objects)
@@ -98,7 +104,6 @@ exports.handler = function(event, context, callback) {
                 ;
             }))
             .then(batchResponse)
-            .tap(log)
             .then(replyVia(callback))
             .done()
         ;

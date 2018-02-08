@@ -3,6 +3,8 @@ Transform: AWS::Serverless-2016-10-31
 Description: Serverless AWS implementation of the GIT-LFS server spec.
 
 Parameters:
+  bucketName:
+    Type: String
   batchUri:
     Type: String
   verifyLocksUri:
@@ -15,13 +17,23 @@ Parameters:
     Type: String
 
 Resources:
+  artifactsBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      AccessControl: private
+      BucketName: !Ref bucketName
   batch:
     Type: 'AWS::Serverless::Function'
     Properties:
       FunctionName: '${repoName}-batch'
-      Handler: batch.handler
       Runtime: nodejs6.10
+      Timeout: 60
+      MemorySize: 64
+      Handler: batch.handler
       CodeUri: !Ref batchUri
+      Policies:
+        - S3CrudPolicy:
+          BucketName: !Ref artifactsBucket
       Events:
         Api:
           Type: Api
@@ -32,8 +44,10 @@ Resources:
     Type: 'AWS::Serverless::Function'
     Properties:
       FunctionName: '${repoName}-verifyLocks'
-      Handler: verifyLocks.handler
       Runtime: nodejs6.10
+      Timeout: 60
+      MemorySize: 64
+      Handler: verifyLocks.handler
       CodeUri: !Ref verifyLocksUri
       Events:
         Api:
@@ -45,8 +59,10 @@ Resources:
     Type: 'AWS::Serverless::Function'
     Properties:
       FunctionName: '${repoName}-listLocks'
-      Handler: listLocks.handler
       Runtime: nodejs6.10
+      Timeout: 60
+      MemorySize: 64
+      Handler: listLocks.handler
       CodeUri: !Ref listLocksUri
       Events:
         Api:
@@ -58,8 +74,10 @@ Resources:
     Type: 'AWS::Serverless::Function'
     Properties:
       FunctionName: '${repoName}-createLock'
-      Handler: createLock.handler
       Runtime: nodejs6.10
+      Timeout: 60
+      MemorySize: 64
+      Handler: createLock.handler
       CodeUri: !Ref createLockUri
       Events:
         Api:
@@ -71,8 +89,10 @@ Resources:
     Type: 'AWS::Serverless::Function'
     Properties:
       FunctionName: '${repoName}-deleteLock'
-      Handler: deleteLock.handler
       Runtime: nodejs6.10
+      Timeout: 60
+      MemorySize: 64
+      Handler: deleteLock.handler
       CodeUri: !Ref deleteLockUri
       Events:
         Api:

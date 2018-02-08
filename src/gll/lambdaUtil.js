@@ -4,7 +4,6 @@ const Q = require('Q');
 const format = require('util').format;
 
 const gll = require("./base.js");
-const log = gll.log;
 const lambda = new gll.configuredAWS.Lambda();
 const paths = require('./paths.js');
 const projectConfig = gll.projectConfig;
@@ -16,9 +15,6 @@ const firstOrDefault = qutils.firstOrDefault;
 exports.deploy = deploy;
 exports.remove = remove;
 exports.getFunction = getFunction;
-exports.addInvokePermission = addInvokePermission;
-exports.removePermission = removePermission;
-exports.getPolicy = getPolicy;
 exports.zip = zip;
 
 function deploy(functionName) {
@@ -38,22 +34,11 @@ function deploy(functionName) {
 
 function getFunction(functionName) {
     return lambda.listFunctions({}).promise()
-
         .get('Functions')
         .then(filter(function(f) {
             return f.FunctionName == functionName;
         }))
         .then(firstOrDefault)
-    ;
-}
-
-function getPolicy(functionName) {
-    return lambda.getPolicy({FunctionName: functionName}).promise()
-        .get('Policy')
-        .then(JSON.parse)
-        .catch(function(err) {
-            return null;
-        })
     ;
 }
 
@@ -68,69 +53,41 @@ function remove(functionName) {
 }
 
 function verify(functionName) {
-    var deferred = Q.defer();
-    fs.access(paths.sourceRootFor(functionName), function (err) {
-        if (err) deferred.reject(new Error(err));
-        else deferred.resolve(functionName)
-    });
-    return deferred.promise
-}
-
-function removePermission(functionName, sid) {
-    gll.log("Removing %s", functionName);
-    var params = {
-        FunctionName: functionName,
-        StatementId: sid
-    };
-    return lambda.removePermission(params).promise();
-}
-
-function addInvokePermission(functionName, sourceArn, statementId) {
-    gll.log("Adding %s", functionName);
-    var params = {
-        Action: "lambda:InvokeFunction",
-        Principal: "apigateway.amazonaws.com",
-        FunctionName: functionName,
-        SourceArn: sourceArn,
-        StatementId: statementId,
-    };
-    return lambda.addPermission(params).promise();
+    return Q.nfcall(fs.access, paths.sourceFileForFunction(functionName));
 }
 
 function zip(functionName) {
-    log("zipping %s", functionName)
+    gll.log("zipping %s", functionName)
     var deferred = Q.defer();
 
+    var deploymentPackage = paths.deploymentPackageFor(functionName);
 
-    var outfilePath = paths.deploymentPackageFor(functionName);
-    var functionDir = paths.sourceRootFor(functionName);
-
-    var output = fs.createWriteStream(outfilePath);
+    var output = fs.createWriteStream(deploymentPackage);
     output.on('end', function() {
-        log("Done writing for %s", outfilePath);
+        gll.log("Done writing for %s", deploymentPackage);
     });
     output.on('close', function () {
-        log("%s zipped with %s bytes.", outfilePath, archive.pointer());
-        deferred.resolve(outfilePath);
+        gll.log("%s zipped with %s bytes.", deploymentPackage, archive.pointer());
+        deferred.resolve(deploymentPackage);
     });
 
     var archive = archiver('zip');
     archive.on('warning', function(warn) {
         if(warn.code === 'ENOENT') {
-            log(warn);
+            gll.log("Archiver - Error No Entity warning: %s", warn);
         } else {
             deferred.reject(new Error(warn));
         }
     });
     archive.on('error', function (err) {
-        log("Error writing zip file %s: %s", outfilePath, err);
+        gll.log("Error writing zip file %s: %s", deploymentPackage, err);
         deferred.reject(new Error(err));
     });
 
     archive.pipe(output);
 
-    archive.directory(functionDir, './');
-    archive.directory(paths.commonRoot(), './common');
+    archive.file(paths.sourceFileForFunction(functionName));
+    archive.directory(paths.commonRoot(), 'common');
     archive.finalize();
 
     return deferred.promise;
@@ -158,7 +115,7 @@ function checkForExisting(functionName) {
 }
 
 function updateFunction(zipFile, functionName) {
-    log("Updating existing function %s", functionName);
+    gll.log("Updating existing function %s", functionName);
     var params = {
         FunctionName: functionName,
         Publish: true,
@@ -168,7 +125,7 @@ function updateFunction(zipFile, functionName) {
 }
 
 function createNewFunction(zipFile, functionName) {
-    log("Creating new function %s", functionName);
+    gll.log("Creating new function %s", functionName);
     var params = {
         FunctionName: functionName,
         Handler: format("%s.%s", functionName, "handler"),
