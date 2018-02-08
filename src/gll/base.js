@@ -2,7 +2,8 @@ const fs = require('fs');
 const AWS = require('aws-sdk');
 const format = require('util').format;
 const paths = require('./paths.js');
-const apiConfig = JSON.parse(fs.readFileSync(paths.gllPath("apiConfig.json")));
+
+const apiConfig = JSON.parse(fs.readFileSync(paths.gllPath("gllConfig.json")));
 AWS.config.update({region: apiConfig.awsRegion});
 AWS.config.setPromisesDependency(require('Q').Promise);
 

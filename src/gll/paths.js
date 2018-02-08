@@ -3,8 +3,12 @@ const os = require('os');
 const format = require('util').format;
 
 exports.projectRoot = function() {
-    //TODO ?
+    //TODO
     return process.cwd();
+};
+
+exports.configFilePath = function() {
+    return exports.gllPath("apiConfig.json");
 };
 
 exports.gllPath = function(fileName) {
@@ -53,13 +57,4 @@ exports.commonRoot = function(filename) {
     );
     if(!filename) return p;
     return path.join(p, filename);
-};
-
-exports.apiNameForRepo = function(prefix, repoName) {
-    return format('%s%s', prefix, repoName);
-};
-
-exports.bucketNameForRepo = function(prefix, repoName) {
-    //No upper case characters allowed in bucket names
-    return format('%s%s', prefix, repoName).toLowerCase();
 };

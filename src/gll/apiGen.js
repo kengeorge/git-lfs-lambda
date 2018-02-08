@@ -15,17 +15,17 @@ const passTo = qutils.passTo;
 const keyMap = qutils.keyMap;
 const forEach = qutils.forEach;
 const qify = qutils.qify;
+const using = qutils.using;
 const print = qutils.print;
 const decorate = qutils.decorate;
 
 const lambda = require('./lambdaUtil.js');
-const gateway = require('./gatewayUtil.js');
 const s3 = require('./s3Util.js');
 const cloud = require('./cloudUtil.js');
 
 program.version("v0.1");
 
-function getAllFunctions(){
+function getAllFunctions() {
     return Q([
         "batch",
         "verifyLocks",
@@ -37,90 +37,149 @@ function getAllFunctions(){
 
 function configure(repoName) {
     return Q(gll.apiConfig)
-        .then(function(apiConfig) {
-            apiConfig.repoName = repoName;
-            apiConfig.apiName = paths.apiNameForRepo(apiConfig.repoApiPrefix, repoName);
-            apiConfig.bucketName = paths.bucketNameForRepo(apiConfig.bucketPrefix, repoName);
-            apiConfig.stackName = 'gllCloudStack';
-            apiConfig.changeSetName = 'gllCloudChangeSet';
-            return apiConfig;
+        .then(function (config) {
+            config.repoName = repoName;
+            config.bucketName = format(config.formats.bucketNameForRepo, repoName).toLowerCase();
+            config.apiName = format(config.formats.apiNameForRepo, repoName).toLowerCase();
+            config.stackName = format(config.formats.stackNameForRepo, repoName).toLowerCase();
+            config.changeSetName = format(config.formats.changeSetNameForRepo, repoName).toLowerCase();
+            config.deploymentBucket = config.formats.deploymentBucketName.toLowerCase();
+            return config;
         })
-    ;
+        ;
 }
 
 program
     .command('generate <repoName>')
-    .description('Deploy a new git-lfs-lambda api based on apiConfig.json')
-    .action(function(repoName, options) {
+    .description('Deploy a new git-lfs-lambda api based on gllConfig.json')
+    .action(function (repoName, options) {
 
         configure(repoName)
             .then(print("Creating S3 bucket for deployment..."))
-            .tap(function(instance) {
-                return Q(instance)
-                    .get('bucketName')
-                    .then(s3.createBucket)
+            .tap(log)
+            .tap(using('deploymentBucket', function(bucketName) {
+                return s3.createBucket(bucketName)
                     .catch(function (err) {
-                        if (err.statusCode != 409) throw new Error(err);
-                        log("Bucket [%s] already exists...", instance.bucketName)
+                        if (err && err.statusCode != 409) throw new Error(err);
+                        log("Bucket [%s] already exists...", bucketName)
                     })
-                ;
-            })
-
-            .tap(decorate('lambdaFunctions', function(instance){
-                return getAllFunctions()
-                    .then(keyMap(lambda.zip))
-                    .then(keyMap(function(name, zipFile) {
-                        return Q.nfcall(fs.readFile, zipFile);
-                    }))
-
-                    .then(keyMap(function(name, bits) {
-                        return s3.put(instance.bucketName, name, bits)
-                            .then(function() {
-                                return format("s3://%s/%s", instance.bucketName, name);
-                            });
-                    }))
-                ;
             }))
 
+            .then(print("Uploading lambda functions..."))
+            .tap(decorate('batchUri', function (instance) {
+                return upload('batch', instance.deploymentBucket);
+            }))
+            .tap(decorate('verifyLocksUri', function (instance) {
+                return upload('verifyLocks', instance.deploymentBucket);
+            }))
+            .tap(decorate('listLocksUri', function (instance) {
+                return upload('listLocks', instance.deploymentBucket);
+            }))
+            .tap(decorate('createLockUri', function (instance) {
+                return upload('createLock', instance.deploymentBucket);
+            }))
+            .tap(decorate('deleteLockUri', function (instance) {
+                return upload('deleteLock', instance.deploymentBucket);
+            }))
+
+            .tap(decorate('template', compileTemplate))
+
+            .then(print("Creating change set..."))
             .then(function(instance) {
-                return Q.nfcall(fs.readFile, paths.templateFile(), "utf-8")
-                    //some fields in SAM template can't take parameters, so doing it myself
-                    .then(passTo(replace, instance))
-                    .then(print("Creating change set..."))
-                    .then(passTo(cloud.createChangeSet, instance.bucketName, instance.repoName))
-                    .then(print("Executing change set..."))
-                    .then(cloud.executeChangeSet)
+                return cloud.createChangeSet(instance.template, instance)
             })
 
+            .then(print("Executing change set..."))
+            .then(cloud.executeChangeSet)
+            /*
+            .then(function(instance) {
+                compileTemplate(instance)
+            })
+            .catch(function(err){
+                log("ERROR: %s", err);
+                configure(repoName)
+                    .get('stackName')
+                    .then(print("Deleting stack..."))
+                    .then(cloud.deleteStack)
+                    .done();
+                ;
+            })
+            */
             .then(print('========= RESULT =========='))
             .tap(log)
             .then(print('========== DONE ==========='))
             .done();
     });
 
+function upload(functionName, bucketName) {
+    return lambda.zip(functionName)
+        .then(function(zipFile) {return Q.nfcall(fs.readFile, zipFile); })
+        .then(passTo(s3.put, bucketName, functionName + ".zip"))
+        .then(function () {
+            return format("s3://%s/%s.zip", bucketName, functionName);
+        })
+    ;
+}
+
+function uploadLambdaFunctions(bucketName) {
+    return getAllFunctions()
+    //.then(forEach(function(name) { return name + "Uri"} ))
+        .then(keyMap(lambda.zip))
+        .then(keyMap(function (name, zipFile) {
+            return Q.nfcall(fs.readFile, zipFile);
+        }))
+        .then(keyMap(function (name, bits) {
+            return s3.put(bits, bucketName, name)
+                .then(function () {
+                    return format("s3://%s/%s", bucketName, name);
+                });
+        }));
+}
+
+function compileTemplate(data) {
+    return Q.nfcall(fs.readFile, paths.templateFile(), "utf-8")
+    //some fields in SAM template can't take parameters, so doing it myself
+        .then(passTo(replace, data))
+        ;
+}
+
 program
     .command('do')
     .description('Does whatever I need it to do at the moment...')
-    .action(function(){
+    .action(function () {
         return s3.getUrl("git-lfs-lambda-cloudrepo", "mytest")
             .tap(log)
             .done();
     });
 
 program
-    .command('delete-stack <stackName>')
-    .description('Fetch information on the specified function.')
-    .action(function(stackName, options) {
-        cloud.deleteStack(stackName)
+    .command('delete-stack <repoName>')
+    .action(function (repoName, options) {
+        configure(repoName)
+            .get('stackName')
+            .then(print("Attempting to delete stack..."))
+            .then(cloud.deleteStack)
+            .then(print("Deletion complete."))
+            .done();
+    });
+
+program
+    .command('compile-template <repoName>')
+    .description('Compile the SAM template file for the given repo name.')
+    .option('-l, --local', 'Compile for SAM local.')
+    .action(function (repoName) {
+        configure(repoName)
+            .then(compileTemplate)
             .tap(log)
             .done();
     });
+
 
 program
     .command('remove-function [functionNames...]')
     .description('Remove specified function(s) from Lambda account.')
     .option('-a, --all', 'Remove all managed functions.')
-    .action(function(functionNames, options) {
+    .action(function (functionNames, options) {
         var list = options.all ? getAllFunctions() : qify(functionNames);
         list
             .then(forEach(function (functionName) {
@@ -143,7 +202,7 @@ program
     .command('deploy-functions [functionNames]')
     .description('Deploy functions to Lambda account.')
     .option('-a, --all', 'Deploy all managed functions.')
-    .action(function(functionNames, options) {
+    .action(function (functionNames, options) {
         var list = options.all ? getAllFunctions() : qify(functionNames);
         list
             .then(forEach(function (functionName) {
@@ -164,64 +223,25 @@ program
 ;
 
 program
-    .command('deploy-api <apiName>')
-    .description('Deploy specified api to APIGateway account.')
-    .action(function(apiName, options) {
-        gateway.remove(apiName)
-            .then(function(response) {
-                log("Api removal results: %s", pretty(response));
-            })
-            .catch(function (err) {
-                log("Could not remove api %s: [%s]", apiName, err);
-            })
-            .done();
-    });
-
-program
-    .command('remove-api <apiName>')
-    .description('Remove specified api from APIGateway account.')
-    .action(function(apiName, options) {
-        gateway
-            .getApis(apiName)
-            .then(forEach(gateway.remove))
-            .then(function (results) {
-                log("Api removal results: %s", pretty(results));
-            })
-            .catch(function (err) {
-                log("Could not remove api %s: [%s]", apiName, err);
-            })
-            .done();
-    });
-
-program
-    .command('read-api <apiName>')
-    .description('Fetch swagger spec for the specified api.')
-    .action(function(apiName, options){
-        gateway.getFirstApi(apiName)
-            .then(gateway.getApiSpec)
-            .tap(log)
-            .done();
-    });
-
-program
     .command('*')
-    .action(function(env){
+    .action(function (env) {
         console.log("No valid command found.")
         program.outputHelp();
     });
 program.parse(process.argv);
-if(process.argv.slice(2).length <= 0) {
+if (process.argv.slice(2).length <= 0) {
     console.log("No valid command found.")
     program.outputHelp();
 }
 
 function replace(text, placeholderData) {
-    while (match = text.match(/\$\{(\w+)\}/)) {
-        var token = match[0];
-        var symbol = match[1];
-        var data = placeholderData[symbol];
-        if (!data) throw new Error(format("Unknown token: >>> %s <<<", token));
-        text = text.replace(token, data);
+    for (var key in placeholderData) {
+        var data = placeholderData[key];
+        var pattern = new RegExp("\\$\\{" + key + "\\}");
+        while (match = text.match(pattern)) {
+            var token = match[0];
+            if (data) text = text.replace(token, data);
+        }
     }
     return text;
 }

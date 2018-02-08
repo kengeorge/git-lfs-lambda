@@ -5,22 +5,12 @@ Description: Serverless AWS implementation of the GIT-LFS server spec.
 Parameters:
   bucketName:
     Type: String
-  batchUri:
-    Type: String
-  verifyLocksUri:
-    Type: String
-  listLocksUri:
-    Type: String
-  createLockUri:
-    Type: String
-  deleteLockUri:
-    Type: String
 
 Resources:
   artifactsBucket:
     Type: 'AWS::S3::Bucket'
     Properties:
-      AccessControl: private
+      AccessControl: Private
       BucketName: !Ref bucketName
   batch:
     Type: 'AWS::Serverless::Function'
@@ -28,9 +18,8 @@ Resources:
       FunctionName: '${repoName}-batch'
       Runtime: nodejs6.10
       Timeout: 60
-      MemorySize: 64
       Handler: batch.handler
-      CodeUri: !Ref batchUri
+      CodeUri: ${batchUri}
       Policies:
         - S3CrudPolicy:
           BucketName: !Ref artifactsBucket
@@ -46,9 +35,8 @@ Resources:
       FunctionName: '${repoName}-verifyLocks'
       Runtime: nodejs6.10
       Timeout: 60
-      MemorySize: 64
       Handler: verifyLocks.handler
-      CodeUri: !Ref verifyLocksUri
+      CodeUri: ${verifyLocksUri}
       Events:
         Api:
           Type: Api
@@ -61,9 +49,8 @@ Resources:
       FunctionName: '${repoName}-listLocks'
       Runtime: nodejs6.10
       Timeout: 60
-      MemorySize: 64
       Handler: listLocks.handler
-      CodeUri: !Ref listLocksUri
+      CodeUri: ${listLocksUri}
       Events:
         Api:
           Type: Api
@@ -76,9 +63,8 @@ Resources:
       FunctionName: '${repoName}-createLock'
       Runtime: nodejs6.10
       Timeout: 60
-      MemorySize: 64
       Handler: createLock.handler
-      CodeUri: !Ref createLockUri
+      CodeUri: ${createLockUri}
       Events:
         Api:
           Type: Api
@@ -91,9 +77,8 @@ Resources:
       FunctionName: '${repoName}-deleteLock'
       Runtime: nodejs6.10
       Timeout: 60
-      MemorySize: 64
       Handler: deleteLock.handler
-      CodeUri: !Ref deleteLockUri
+      CodeUri: ${deleteLockUri}
       Events:
         Api:
           Type: Api

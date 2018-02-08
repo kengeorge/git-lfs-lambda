@@ -29,7 +29,7 @@ exports.getOrCreateBucket = function(bucketName) {
     ;
 };
 
-exports.put = function(bucketName, fileName, fileBits) {
+exports.put = function(fileBits, bucketName, fileName) {
     var params = {
         Bucket: bucketName,
         Key: fileName,

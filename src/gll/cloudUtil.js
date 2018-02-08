@@ -1,30 +1,35 @@
 const Q = require('Q');
 Q.longStackSupport = true;
-const format = require('util').format;
 const paths = require('./paths.js')
 
 const gll = require('./base.js');
 const cloud = new gll.configuredAWS.CloudFormation();
 const qutils = require(paths.commonRoot('qutils.js'));
 
-exports.createChangeSet = function(templateText, deploymentBucketName, repoName) {
-    var stackName = format("git-lfs-lambda-%s-stack", repoName);
-    var changeSetName = 'gllTestChangeSet';
+exports.createChangeSet = function(templateText, config) {
     //var exists = CheckForExisting(stackName, changeSetName);
     var exists = false;
     var params = {
         TemplateBody: templateText,
-        StackName: stackName,
-        ChangeSetName: changeSetName,
+        StackName: config.stackName,
+        ChangeSetName: config.changeSetName,
         ChangeSetType: exists ? 'UPDATE' : 'CREATE',
         Capabilities: ['CAPABILITY_IAM'],
         Parameters: [
             {
-                ParameterKey: 'deploymentBucketName',
-                ParameterValue: deploymentBucketName
+                ParameterKey: 'bucketName',
+                ParameterValue: config.bucketName
             },
         ]
     };
+    /*
+    for(var name in config.lambdaFunctions) {
+        params.Parameters.push({
+            ParameterKey: name + "Uri",
+            ParameterValue: config.lambdaFunctions[name]
+        });
+    }
+    */
     return cloud.createChangeSet(params).promise()
         .tap(function (response) {
             var params = {ChangeSetName: response.Id};
@@ -49,6 +54,9 @@ exports.deleteStack = function(stackName) {
     var params = {
         StackName: stackName
     };
-    return cloud.deleteStack(params).promise();
+    return cloud.deleteStack(params).promise()
+        .tap(function() {
+            return cloud.waitFor('stackDeleteComplete', params).promise();
+        });
 };
 

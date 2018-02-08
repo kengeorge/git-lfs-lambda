@@ -109,6 +109,9 @@ exports.using = function() {
  * object with the initial value as its key.
  * i.e. ['one', 'two'] -> keyMap(parseToInt) -> {one: 1, two: 2}
  *
+ * Also accepts key, value arguments function when called on objects.
+ * i.e.: {'one': 1, 'two': 2} -> keyMap(function(key, val)
+ *
  */
 exports.keyMap = function(handlerFunc) {
     return function (inputArray) {
@@ -172,6 +175,10 @@ exports.print = function(message) {
 exports.map = function(mapping){
     return function(input) {
         var ret = {};
+
+        /*
+         * { batchUri: 'lambdaFunctions.batch
+         */
         for(var mapKey in mapping) {
             var mapVal = mapping[mapKey];
             ret[mapKey] = input[mapVal];
