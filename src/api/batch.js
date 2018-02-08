@@ -9,8 +9,9 @@ const s3 = new AWS.S3();
 
 const respond = require('common/lambdaResponse.js');
 const qutils = require('common/qutils.js');
+const decorateEach = qutils.decorateEach;
+const decorate = qutils.decorate;
 const forEach = qutils.forEach;
-const print = qutils.print;
 
 const transferType = "basic";
 const tempConfig = {
@@ -20,6 +21,30 @@ const tempConfig = {
 
 function GetBucket() {
     return tempConfig.bucket;
+}
+
+function batchResponse(objects) {
+   return Q({transfer: transferType})
+       .then(decorate('objects', function(){
+           return Q(objects)
+               .then(forEach(function(o){
+                   return {
+                       oid: o.oid,
+                       size: o.size,
+                       authenticated: true,
+                       actions: {
+                           upload: {
+                               href: o.uploadUrl,
+                               header: {
+                               },
+                               expires_in: 900
+                           }
+                       }
+                   };
+               }))
+       }))
+       .tap(log)
+    ;
 }
 
 function GetKey(fileName) {
@@ -51,9 +76,8 @@ function getUploadUrl(oid) {
 
 function replyVia(callback) {
     return function(items) {
-        log("BODY: %s", items);
         var res = respond(200, items);
-        log("RES: %s", res);
+        log("FINAL RESPONSE: %s", res);
         return callback(null, res);
     };
 }
@@ -65,19 +89,19 @@ exports.handler = function(event, context, callback) {
     }
 
     if(request.operation == "upload") {
-
         return Q(request.objects)
-            .then(forEach(function(item) {
+            .then(decorateEach('uploadUrl', function(item) {
                 return Q(item)
                     .get('oid')
                     .then(GetKey)
                     .then(getUploadUrl)
                 ;
             }))
+            .then(batchResponse)
+            .tap(log)
             .then(replyVia(callback))
             .done()
         ;
-
     } else if(request.operation == "download") {
         throw new Error("Download not implemented.");
     }

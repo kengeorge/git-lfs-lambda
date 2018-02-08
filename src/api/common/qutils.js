@@ -19,6 +19,32 @@ exports.forEachField = function(callFunc){
 };
 
 /**
+ * Assigns the result of the handler ot the given field of the input.
+ * Can be called from tap or then equivalently.
+ * i.e. {one: 1, two: 2} -> decorate('three', function(){return 3;} -> {one: 1, two: 2:, three: 3}
+ */
+exports.decorate = function(fieldName, handlerFunc) {
+    return function (input) {
+        return handlerFunc(input)
+            .then(function (results) {
+                input[fieldName] = results;
+                return input;
+            });
+    };
+};
+
+exports.decorateEach = function(fieldName, callFunc) {
+    return function(input) {
+        return Q(input)
+            .then(exports.forEach(function(item){
+                return Q(item)
+                    .then(exports.decorate(fieldName, callFunc))
+                ;
+            }));
+    };
+};
+
+/**
  * Takes the input and calls the given function (passed as the first argument)
  * with any additional arguments also passed to he function AFTER the input argument.
  * i.e. {one: 1, two: 2} -> .then(passTo(func, 'three')) -> calls func({one: 1, two: 2}, 'three')
@@ -171,20 +197,6 @@ exports.list = function() {
     };
 };
 
-/**
- * Assigns the result of the handler ot the given field of the input.
- * Can be called from tap or then equivalently.
- * i.e. {one: 1, two: 2} -> decorate('three', function(){return 3;} -> {one: 1, two: 2:, three: 3}
- */
-exports.decorate = function(fieldName, handlerFunc) {
-    return function (input) {
-        return handlerFunc(input)
-            .then(function (results) {
-                input[fieldName] = results;
-                return input;
-            });
-    };
-};
 
 exports.filter = function(filterFunc) {
     return function(input) {
