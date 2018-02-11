@@ -4,7 +4,7 @@ templateName=template.yaml
 testTemplateName=localTemplate.ignore.yaml
 repoName=localtest
 apiDir="./src/api"
-params="batchUri=.,verifyLocksUri=.,listLocksUri=.,createLockUri=.,deleteLockUri=."
+params="bucketName=cloudrepo-git-lfs-lambda"
 
 sed s/\$\{repoName\}/$repoName/g $templateName > $apiDir/$testTemplateName
 

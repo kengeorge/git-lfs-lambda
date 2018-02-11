@@ -31,7 +31,7 @@ exports.outputDir = function() {
 exports.deploymentPackageFor = function(functionName) {
     return path.join(
         exports.outputDir(),
-        format("deploymentPackage-%s", functionName)
+        format("deploymentPackage-%s.zip", functionName)
     );
 };
 
@@ -50,7 +50,14 @@ exports.apiSourceRoot = function() {
     );
 };
 
-exports.commonRoot = function(filename) {
+exports.apiNodeRoot = function() {
+    return path.join(
+        exports.apiSourceRoot(),
+        "node_modules"
+    );
+};
+
+exports.apiCommonRoot = function(filename) {
     var p = path.join(
         exports.apiSourceRoot(),
         "common/"

@@ -1,4 +1,4 @@
-const Q = require('Q');
+const Q = require('q');
 
 exports.forEachItem = function(callFunc) {
     return function (input) {

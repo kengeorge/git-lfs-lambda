@@ -10,7 +10,7 @@ const log = gll.log;
 const pretty = gll.pretty;
 const paths = require('./paths.js')
 
-const qutils = require(paths.commonRoot('qutils.js'));
+const qutils = require(paths.apiCommonRoot('qutils.js'));
 const passTo = qutils.passTo;
 const keyMap = qutils.keyMap;
 const forEach = qutils.forEach;
@@ -56,7 +56,6 @@ program
 
         configure(repoName)
             .then(print("Creating S3 bucket for deployment..."))
-            .tap(log)
             .tap(using('deploymentBucket', function(bucketName) {
                 return s3.createBucket(bucketName)
                     .catch(function (err) {
@@ -84,27 +83,15 @@ program
 
             .tap(decorate('template', compileTemplate))
 
+            .tap(log)
+
             .then(print("Creating change set..."))
             .then(function(instance) {
                 return cloud.createChangeSet(instance.template, instance)
             })
-
             .then(print("Executing change set..."))
             .then(cloud.executeChangeSet)
-            /*
-            .then(function(instance) {
-                compileTemplate(instance)
-            })
-            .catch(function(err){
-                log("ERROR: %s", err);
-                configure(repoName)
-                    .get('stackName')
-                    .then(print("Deleting stack..."))
-                    .then(cloud.deleteStack)
-                    .done();
-                ;
-            })
-            */
+
             .then(print('========= RESULT =========='))
             .tap(log)
             .then(print('========== DONE ==========='))

@@ -13,14 +13,7 @@ const decorate = qutils.decorate;
 const forEach = qutils.forEach;
 
 const transferType = "basic";
-const tempConfig = {
-    repo: "cloudrpeo",
-    bucket: "git-lfs-lambda-cloudrepo"
-};
-
-function GetBucket() {
-    return tempConfig.bucket;
-}
+const BUCKET_NAME = "cloudrepo-git-lfs-lambda"; //process.env.GLL_ARTIFACTS_BUCKET;
 
 function batchResponse(objects) {
    return Q({transfer: transferType})
@@ -62,7 +55,7 @@ function pretty(data) {
 function getUploadUrl(oid) {
     var deferred = Q.defer();
     var params = {
-        Bucket: GetBucket(),
+        Bucket: BUCKET_NAME,
         Key: oid
     };
     s3.getSignedUrl('putObject', params, function(err, data) {

@@ -65,6 +65,9 @@ Resources:
       Timeout: 60
       Handler: createLock.handler
       CodeUri: ${createLockUri}
+      Environment:
+        Variables:
+          GLL_ARTIFACTS_BUCKET: !Ref artifactsBucket
       Events:
         Api:
           Type: Api

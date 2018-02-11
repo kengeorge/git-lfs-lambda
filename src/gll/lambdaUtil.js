@@ -86,8 +86,11 @@ function zip(functionName) {
 
     archive.pipe(output);
 
-    archive.file(paths.sourceFileForFunction(functionName));
-    archive.directory(paths.commonRoot(), 'common');
+    archive.file(paths.sourceFileForFunction(functionName),
+        { name: functionName + ".js" }
+    );
+    archive.directory(paths.apiCommonRoot(), 'common');
+    archive.directory(paths.apiNodeRoot(), 'node_modules');
     archive.finalize();
 
     return deferred.promise;
