@@ -13,7 +13,7 @@ const decorate = qutils.decorate;
 const forEach = qutils.forEach;
 
 const transferType = "basic";
-const BUCKET_NAME = "cloudrepo-git-lfs-lambda"; //process.env.GLL_ARTIFACTS_BUCKET;
+const BUCKET_NAME = process.env.GLL_ARTIFACTS_BUCKET;
 
 function batchResponse(objects) {
    return Q({transfer: transferType})
@@ -86,6 +86,7 @@ exports.handler = function(event, context, callback) {
     log(request);
     log("================ REQUEST");
 
+    log("ENV: %s", process.env);
 
     if(request.operation == "upload") {
         return Q(request.objects)
