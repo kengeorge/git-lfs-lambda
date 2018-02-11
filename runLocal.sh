@@ -5,9 +5,10 @@ testTemplateName=localTemplate.ignore.yaml
 repoName=localtest
 apiDir="./src/api"
 params="bucketName=cloudrepo-git-lfs-lambda"
+templateCmd="./src/gll/apiGen.js compile-template $repoName --local"
 
-sed s/\$\{repoName\}/$repoName/g $templateName > $apiDir/$testTemplateName
+$templateCmd
 
 # cd $apiDir
-sam local start-api --template $apiDir/$testTemplateName --parameter-values $params
+# sam local start-api --template $apiDir/$testTemplateName --parameter-values $params
 

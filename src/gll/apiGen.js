@@ -156,6 +156,11 @@ program
     .option('-l, --local', 'Compile for SAM local.')
     .action(function (repoName) {
         configure(repoName)
+            .tap(decorate('batchUri', qutils.value(".")))
+            .tap(decorate('verifyLocksUri', qutils.value(".")))
+            .tap(decorate('listLocksUri', qutils.value(".")))
+            .tap(decorate('createLockUri', qutils.value(".")))
+            .tap(decorate('deleteLockUri', qutils.value(".")))
             .then(compileTemplate)
             .tap(log)
             .done();
