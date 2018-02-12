@@ -27,8 +27,7 @@ function batchResponse(objects) {
                        actions: {
                            upload: {
                                href: o.uploadUrl,
-                               header: {
-                               },
+                               //header: { },
                                expires_in: 900
                            }
                        }
@@ -36,10 +35,6 @@ function batchResponse(objects) {
                }))
        }))
     ;
-}
-
-function GetKey(fileName) {
-    return fileName;
 }
 
 function log() {
@@ -52,11 +47,12 @@ function pretty(data) {
     return data;
 }
 
-function getUploadUrl(oid) {
+function getUploadUrl(item) {
     var deferred = Q.defer();
     var params = {
         Bucket: BUCKET_NAME,
-        Key: oid
+        Key: item.oid,
+        ContentType: "application/octet-stream",
     };
     s3.getSignedUrl('putObject', params, function(err, data) {
         if(err) deferred.reject(new Error(err));
@@ -90,13 +86,7 @@ exports.handler = function(event, context, callback) {
 
     if(request.operation == "upload") {
         return Q(request.objects)
-            .then(decorateEach('uploadUrl', function(item) {
-                return Q(item)
-                    .get('oid')
-                    .then(GetKey)
-                    .then(getUploadUrl)
-                ;
-            }))
+            .then(decorateEach('uploadUrl', getUploadUrl))
             .then(batchResponse)
             .then(replyVia(callback))
             .done()
