@@ -1,6 +1,7 @@
 'use strict';
 
-module.exports = function(code, bodyObj) {
+///Conform the given code and body to the Lambda Proxy Response format.
+function makeProxyResponse(code, bodyObj) {
     return {
         statusCode: code,
         headers: {
@@ -10,3 +11,13 @@ module.exports = function(code, bodyObj) {
     };
 };
 
+///Promise chainable method for a given statusCode
+function toLambdaResponse(statusCode) {
+    return function(body) {
+        return makeProxyResponse(statusCode, body);
+    };
+}
+
+exports.toLambdaResponse = toLambdaResponse;
+exports.toSuccessfulResponse = toLambdaResponse;
+exports.toErrorResponse = toLambdaResponse;

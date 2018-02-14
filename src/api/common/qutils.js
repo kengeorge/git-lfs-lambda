@@ -47,11 +47,11 @@ exports.decorateEach = function(fieldName, callFunc) {
 /**
  * Takes the input and calls the given function (passed as the first argument)
  * with any additional arguments also passed to he function AFTER the input argument.
- * i.e. {one: 1, two: 2} -> .then(passTo(func, 'three')) -> calls func({one: 1, two: 2}, 'three')
+ * i.e. {one: 1, two: 2} -> .then(passBefore(func, 'three')) -> calls func({one: 1, two: 2}, 'three')
  *
  * @returns {Function}
  */
-exports.passTo = function(){
+exports.passBefore = function(){
     var varArgs = Array.from(arguments);
     var callFunc = varArgs.shift();
     return function(input) {

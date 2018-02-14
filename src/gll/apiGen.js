@@ -11,7 +11,7 @@ const pretty = gll.pretty;
 const paths = require('./paths.js')
 
 const qutils = require(paths.apiCommonRoot('qutils.js'));
-const passTo = qutils.passTo;
+const passBefore = qutils.passBefore;
 const keyMap = qutils.keyMap;
 const forEach = qutils.forEach;
 const qify = qutils.qify;
@@ -101,7 +101,7 @@ program
 function upload(functionName, bucketName) {
     return lambda.zip(functionName)
         .then(function(zipFile) {return Q.nfcall(fs.readFile, zipFile); })
-        .then(passTo(s3.put, bucketName, functionName + ".zip"))
+        .then(passBefore(s3.put, bucketName, functionName + ".zip"))
         .then(function () {
             return format("s3://%s/%s.zip", bucketName, functionName);
         })
@@ -126,7 +126,7 @@ function uploadLambdaFunctions(bucketName) {
 function compileTemplate(data) {
     return Q.nfcall(fs.readFile, paths.templateFile(), "utf-8")
     //some fields in SAM template can't take parameters, so doing it myself
-        .then(passTo(replace, data))
+        .then(passBefore(replace, data))
         ;
 }
 
