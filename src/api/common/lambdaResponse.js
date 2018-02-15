@@ -19,5 +19,3 @@ function toLambdaResponse(statusCode) {
 }
 
 exports.toLambdaResponse = toLambdaResponse;
-exports.toSuccessfulResponse = toLambdaResponse;
-exports.toErrorResponse = toLambdaResponse;

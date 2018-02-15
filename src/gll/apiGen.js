@@ -12,7 +12,6 @@ const paths = require('./paths.js')
 
 const qutils = require(paths.apiCommonRoot('qutils.js'));
 const passBefore = qutils.passBefore;
-const keyMap = qutils.keyMap;
 const forEach = qutils.forEach;
 const qify = qutils.qify;
 const using = qutils.using;
@@ -56,39 +55,28 @@ program
 
         configure(repoName)
             .then(print("Creating S3 bucket for deployment..."))
-            .tap(using('deploymentBucket', function(bucketName) {
-                return s3.createBucket(bucketName)
+            .tap(using('deploymentBucket', bucketName =>
+                s3.createBucket(bucketName)
                     .catch(function (err) {
                         if (err && err.statusCode != 409) throw new Error(err);
                         log("Bucket [%s] already exists...", bucketName)
                     })
-            }))
+            ))
 
             .then(print("Uploading lambda functions..."))
-            .tap(decorate('batchUri', function (instance) {
-                return upload('batch', instance.deploymentBucket);
-            }))
-            .tap(decorate('verifyLocksUri', function (instance) {
-                return upload('verifyLocks', instance.deploymentBucket);
-            }))
-            .tap(decorate('listLocksUri', function (instance) {
-                return upload('listLocks', instance.deploymentBucket);
-            }))
-            .tap(decorate('createLockUri', function (instance) {
-                return upload('createLock', instance.deploymentBucket);
-            }))
-            .tap(decorate('deleteLockUri', function (instance) {
-                return upload('deleteLock', instance.deploymentBucket);
-            }))
+            .tap(decorate('batchUri', instance => upload('batch', instance.deploymentBucket)))
+            .tap(decorate('verifyLocksUri', instance => upload('verifyLocks', instance.deploymentBucket)))
+            .tap(decorate('listLocksUri', instance => upload('listLocks', instance.deploymentBucket)))
+            .tap(decorate('createLockUri', instance => upload('createLock', instance.deploymentBucket)))
+            .tap(decorate('deleteLockUri', instance => upload('deleteLock', instance.deploymentBucket)))
 
             .tap(decorate('template', compileTemplate))
 
             .tap(log)
 
             .then(print("Creating change set..."))
-            .then(function(instance) {
-                return cloud.createChangeSet(instance.template, instance)
-            })
+            .then(instance => cloud.createChangeSet(instance.template, instance))
+
             .then(print("Executing change set..."))
             .then(cloud.executeChangeSet)
 
@@ -100,27 +88,14 @@ program
 
 function upload(functionName, bucketName) {
     return lambda.zip(functionName)
-        .then(function(zipFile) {return Q.nfcall(fs.readFile, zipFile); })
+        .then(function (zipFile) {
+            return Q.nfcall(fs.readFile, zipFile);
+        })
         .then(passBefore(s3.put, bucketName, functionName + ".zip"))
         .then(function () {
             return format("s3://%s/%s.zip", bucketName, functionName);
         })
-    ;
-}
-
-function uploadLambdaFunctions(bucketName) {
-    return getAllFunctions()
-    //.then(forEach(function(name) { return name + "Uri"} ))
-        .then(keyMap(lambda.zip))
-        .then(keyMap(function (name, zipFile) {
-            return Q.nfcall(fs.readFile, zipFile);
-        }))
-        .then(keyMap(function (name, bits) {
-            return s3.put(bits, bucketName, name)
-                .then(function () {
-                    return format("s3://%s/%s", bucketName, name);
-                });
-        }));
+        ;
 }
 
 function compileTemplate(data) {
