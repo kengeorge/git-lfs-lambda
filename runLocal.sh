@@ -3,7 +3,7 @@
 templateName=template.yaml
 testTemplateName=localTemplate.ignore.yaml
 envFileName=localEnvVars.ignore.json
-apiDir="./src/api"
+apiDir="./node_modules/git-lfs-lambda-server"
 
 repoName=cloudrepo
 bucketName="$repoName-git-lfs-lambda"

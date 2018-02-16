@@ -1,0 +1,22 @@
+{
+  "name": "git-lfs-lambda",
+  "version": "0.0.1",
+  "description": "Deployment logic for git-lfs-lambda-server",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://source.developers.google.com/p/ken-01/r/git-lfs-lambda"
+  },
+  "keywords": [
+    "git",
+    "git-lfs",
+    "lfs",
+    "s3",
+    "aws",
+    "lambda"
+  ],
+  "author": "Ken George <ken@whatever.email>",
+  "license": "MIT"
+}
