@@ -10,7 +10,7 @@ const log = gll.log;
 const pretty = gll.pretty;
 const paths = require('./paths.js')
 
-const qutils = require(paths.apiCommonRoot('qutils.js'));
+const qutils = require(paths.gllPath('qutils.js'));
 const passBefore = qutils.passBefore;
 const forEach = qutils.forEach;
 const qify = qutils.qify;

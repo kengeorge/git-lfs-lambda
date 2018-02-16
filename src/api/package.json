@@ -10,6 +10,6 @@
   "author": "Ken George <ken@whatever.email>",
   "license": "MIT",
   "dependencies": {
-    "q": "^1.5.1"
+    "kpromise": "^1.0.1"
   }
 }

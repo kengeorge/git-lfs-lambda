@@ -9,5 +9,3 @@ module.exports.pretty = function(data) {
     if (typeof data === 'object') return JSON.stringify(data, null, 2);
     return data;
 };
-
-

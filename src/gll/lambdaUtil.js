@@ -8,7 +8,7 @@ const lambda = new gll.configuredAWS.Lambda();
 const paths = require('./paths.js');
 const projectConfig = gll.projectConfig;
 
-const qutils = require('../api/common/qutils.js');
+const qutils = require('./qutils.js');
 const filter = qutils.filter;
 const firstOrDefault = qutils.firstOrDefault;
 

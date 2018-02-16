@@ -1,7 +1,7 @@
 const Q = require('Q');
 Q.longStackSupport = true;
 
-const qutils = require('../api/common/qutils.js');
+const qutils = require('./qutils.js');
 const filter = qutils.filter;
 
 const gll = require('./base.js');

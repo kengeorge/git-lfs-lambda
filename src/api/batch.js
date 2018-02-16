@@ -2,11 +2,12 @@
 
 const toLambdaResponse = require('common/lambdaResponse.js').toLambdaResponse;
 const log = require('common/common.js').log;
-const chain = require('common/promiseHelpers.js');
-const forEach = chain.forEach;
-const decorate = chain.decorate;
-const get = chain.get;
-const startWith = chain.startWith;
+
+const K = require('kpromise');
+const forEach = K.forEach;
+const decorate = K.decorate;
+const get = K.get;
+const startWith = K.startWith;
 
 const TRANSFER_TYPE = "basic";
 const S3Datastore = require('common/S3Datastore.js');
@@ -35,9 +36,9 @@ exports.handler = function(event, context, callback) {
                 .then((action) => isUpload ? {upload: action} : {download: action});
         })))
         .then(toBatchResponseFormat)
-        .then(chain.print("RESPONSE vvvvvvvvvvvvvvvv"))
-        .then(chain.peek)
-        .then(chain.print("^^^^^^^^^^^^^^^^ RESPONSE"))
+        .then(K.print("RESPONSE vvvvvvvvvvvvvvvv"))
+        .then(K.peek)
+        .then(K.print("^^^^^^^^^^^^^^^^ RESPONSE"))
         .then(toLambdaResponse(200))
         .then((res) => callback(null, res))
     ;

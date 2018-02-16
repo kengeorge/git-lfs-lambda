@@ -41,6 +41,7 @@ class S3Datastore extends Datastore {
     }
 
     getVerifyUrl(key) {
+        //TODO a verify action response will initiate a post to the given url after the upload is completed.
         return super.getVerifyUrl(key);
     }
 
@@ -49,6 +50,7 @@ class S3Datastore extends Datastore {
             Bucket: this.bucketName,
             Key: key
         };
+        //TODO
         return s3.headObject(params).promise()
             .then(function() {
                 return invert ? null : item;

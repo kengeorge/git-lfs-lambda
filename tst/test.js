@@ -2,7 +2,7 @@
 const program = require('commander');
 const format = require('util').format;
 
-const qutils = require('../src/api/common/qutils.js');
+const qutils = require('../src/gll/qutils.js');
 const read = qutils.read;
 
 const test = require('./util/testUtil.js');

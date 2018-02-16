@@ -3,7 +3,7 @@ Q.longStackSupport = true;
 const format = require('util').format;
 const fs = require('fs');
 
-const qutils = require("../../src/api/common/qutils.js");
+const qutils = require("../../src/gll/qutils.js");
 const read = qutils.read;
 const filter = qutils.filter;
 const decorate = qutils.decorate;

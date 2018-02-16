@@ -4,7 +4,7 @@ const paths = require('./paths.js')
 
 const gll = require('./base.js');
 const cloud = new gll.configuredAWS.CloudFormation();
-const qutils = require(paths.apiCommonRoot('qutils.js'));
+const qutils = require(paths.gllPath('qutils.js'));
 
 exports.createChangeSet = function(templateText, config) {
     //var exists = CheckForExisting(stackName, changeSetName);
