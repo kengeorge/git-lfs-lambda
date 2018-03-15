@@ -18,5 +18,12 @@
     "lambda"
   ],
   "author": "Ken George <ken@whatever.email>",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "archiver": "^2.1.1",
+    "aws-sdk": "^2.209.0",
+    "commander": "^2.15.0",
+    "kpromise": "^1.0.6",
+    "npm": "^5.7.1"
+  }
 }

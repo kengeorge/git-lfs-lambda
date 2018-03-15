@@ -5,7 +5,6 @@ const paths = require('./paths.js');
 
 const apiConfig = JSON.parse(fs.readFileSync(paths.gllPath("gllConfig.json")));
 AWS.config.update({region: apiConfig.awsRegion});
-AWS.config.setPromisesDependency(require('Q').Promise);
 
 function log() {
     var formatted = format.apply(this, Array.from(arguments).map(pretty));

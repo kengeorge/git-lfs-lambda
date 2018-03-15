@@ -5,6 +5,8 @@ Description: Serverless AWS implementation of the GIT-LFS server spec.
 Parameters:
   bucketName:
     Type: String
+  endpoint:
+    Type: String
 
 Resources:
   artifactsBucket:
@@ -23,6 +25,7 @@ Resources:
       Environment:
         Variables:
           GLL_ARTIFACTS_BUCKET: !Ref artifactsBucket
+          GLL_ENDPOINT: !Ref endpoint
       Policies:
         - S3CrudPolicy:
           BucketName: !Ref artifactsBucket
@@ -31,6 +34,27 @@ Resources:
           Type: Api
           Properties:
             Path: /${repoName}.git/info/lfs/objects/batch
+            Method: POST
+  verifyObject:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: '${repoName}-verifyObject'
+      Runtime: nodejs6.10
+      Timeout: 60
+      Handler: verifyObject.handler
+      CodeUri: ${verifyObjectUri}
+      Environment:
+        Variables:
+          GLL_ARTIFACTS_BUCKET: !Ref artifactsBucket
+          GLL_ENDPOINT: !Ref endpoint
+      Policies:
+        - S3ReadPolicy:
+          BucketName: !Ref artifactsBucket
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /${repoName}.git/info/lfs/objects/batch/verify
             Method: POST
   verifyLocks:
     Type: 'AWS::Serverless::Function'
@@ -88,4 +112,3 @@ Resources:
           Properties:
             Path: /${repoName}.git/info/lfs/locks/{id}/unlock
             Method: POST
-

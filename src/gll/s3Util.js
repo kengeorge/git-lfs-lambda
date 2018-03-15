@@ -1,9 +1,5 @@
-const Q = require('Q');
-Q.longStackSupport = true;
-
 const gll = require('./base.js');
 const s3 = new gll.configuredAWS.S3();
-
 
 exports.checkBucket = function (bucketName) {
     return s3.waitFor('bucketExists', {Bucket: bucketName}).promise();
@@ -28,7 +24,7 @@ exports.getOrCreateBucket = function (bucketName) {
 };
 
 exports.put = function (fileBits, bucketName, fileName) {
-    var params = {
+    const params = {
         Bucket: bucketName,
         Key: fileName,
         ACL: 'private',
@@ -38,7 +34,7 @@ exports.put = function (fileBits, bucketName, fileName) {
 };
 
 exports.createBucket = function (bucketName) {
-    var params = {
+    const params = {
         Bucket: bucketName,
         ACL: 'private',
     };

@@ -1,15 +1,12 @@
-const Q = require('Q');
-Q.longStackSupport = true;
-const paths = require('./paths.js')
-
 const gll = require('./base.js');
 const cloud = new gll.configuredAWS.CloudFormation();
-const qutils = require(paths.gllPath('qutils.js'));
+
+const K = require('kpromise');
 
 exports.createChangeSet = function(templateText, config) {
-    //var exists = CheckForExisting(stackName, changeSetName);
-    var exists = false;
-    var params = {
+    const exists = false;
+
+    const params = {
         TemplateBody: templateText,
         StackName: config.stackName,
         ChangeSetName: config.changeSetName,
@@ -31,19 +28,19 @@ exports.createChangeSet = function(templateText, config) {
     }
     */
     return cloud.createChangeSet(params).promise()
-        .tap(function (response) {
-            var params = {ChangeSetName: response.Id};
-            return cloud.waitFor('changeSetCreateComplete', params).promise();
-        });
+        .then(get('Id'))
+        .then((id) => {
+            return cloud.waitFor('changeSetCreateComplete', {ChangeSetName: id}).promise();
+        })
 };
 
 exports.executeChangeSet = function(changeSetResponse){
-    var params = {
+    const params = {
         ChangeSetName: changeSetResponse.Id,
     };
     return cloud.executeChangeSet(params).promise()
         .tap(function() {
-            var params = {
+            const params = {
                 StackName: changeSetResponse.StackId
             };
             return cloud.waitFor('stackCreateComplete', params).promise();
@@ -51,7 +48,7 @@ exports.executeChangeSet = function(changeSetResponse){
 };
 
 exports.deleteStack = function(stackName) {
-    var params = {
+    const params = {
         StackName: stackName
     };
     return cloud.deleteStack(params).promise()

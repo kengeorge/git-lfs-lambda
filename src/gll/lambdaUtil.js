@@ -1,6 +1,4 @@
-const archiver = require('archiver');
 const fs = require('fs');
-const Q = require('Q');
 const format = require('util').format;
 
 const gll = require("./base.js");
@@ -8,14 +6,9 @@ const lambda = new gll.configuredAWS.Lambda();
 const paths = require('./paths.js');
 const projectConfig = gll.projectConfig;
 
-const qutils = require('./qutils.js');
-const filter = qutils.filter;
-const firstOrDefault = qutils.firstOrDefault;
-
 exports.deploy = deploy;
 exports.remove = remove;
 exports.getFunction = getFunction;
-exports.zip = zip;
 
 function deploy(functionName) {
     return verify(functionName)
@@ -56,50 +49,6 @@ function verify(functionName) {
     return Q.nfcall(fs.access, paths.sourceFileForFunction(functionName));
 }
 
-function zip(functionName) {
-    gll.log("zipping %s", functionName)
-    var deferred = Q.defer();
-
-    var deploymentPackage = paths.deploymentPackageFor(functionName);
-
-    var output = fs.createWriteStream(deploymentPackage);
-    output.on('end', function() {
-        gll.log("Done writing for %s", deploymentPackage);
-    });
-    output.on('close', function () {
-        gll.log("%s zipped with %s bytes.", deploymentPackage, archive.pointer());
-        deferred.resolve(deploymentPackage);
-    });
-
-    var archive = archiver('zip');
-    archive.on('warning', function(warn) {
-        if(warn.code === 'ENOENT') {
-            gll.log("Archiver - Error No Entity warning: %s", warn);
-        } else {
-            deferred.reject(new Error(warn));
-        }
-    });
-    archive.on('error', function (err) {
-        gll.log("Error writing zip file %s: %s", deploymentPackage, err);
-        deferred.reject(new Error(err));
-    });
-
-    archive.pipe(output);
-
-    archive.file(paths.sourceFileForFunction(functionName),
-        { name: functionName + ".js" }
-    );
-    archive.directory(paths.apiCommonRoot(), 'common');
-    archive.directory(paths.apiNodeRoot(), 'node_modules');
-    archive.finalize();
-
-    return deferred.promise;
-
-}
-
-function readZipBits(zipFile) {
-    return Q.nfcall(fs.readFile, zipFile);
-}
 
 function checkForExisting(functionName) {
     var deferred = Q.defer();
