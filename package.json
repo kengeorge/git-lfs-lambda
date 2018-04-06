@@ -23,6 +23,7 @@
     "archiver": "^2.1.1",
     "aws-sdk": "^2.209.0",
     "commander": "^2.15.0",
+    "git-lfs-lambda-server": "0.0.2",
     "kpromise": "^1.0.6",
     "npm": "^5.8.0"
   }
