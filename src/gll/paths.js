@@ -2,66 +2,47 @@ const path = require('path');
 const os = require('os');
 const format = require('util').format;
 
-exports.projectRoot = function() {
-    //TODO
-    return process.cwd();
-};
+const SERVER_PACKAGE = "git-lfs-lambda-server";
+const manifest = require(SERVER_PACKAGE).manifest;
 
-exports.configFilePath = function() {
-    return exports.gllPath("apiConfig.json");
-};
+//TODO
+exports.projectRoot = () => process.cwd();
 
-exports.gllPath = function(fileName) {
-    var p = path.dirname(require.main.filename);
+exports.configFilePath = () => exports.gllPath("apiConfig.json");
+
+exports.gllPath = (fileName) => {
+    const p = path.dirname(require.main.filename);
     if(!fileName) return p;
     return path.join(p, fileName);
 };
 
-exports.sourceFileForFunction = function(functionName) {
-    return path.join(
-        exports.apiSourceRoot(),
-        functionName + ".js"
-    );
-};
 
-exports.outputDir = function() {
-     return os.tmpdir();
-};
+exports.outputDir = () => os.tmpdir();
 
-exports.deploymentPackageFor = function(functionName) {
-    return path.join(
-        exports.outputDir(),
-        format("deploymentPackage-%s.zip", functionName)
-    );
-};
+exports.deploymentPackageFor = (functionName) => path.join(
+    exports.outputDir(),
+    format("deploymentPackage-%s.zip", functionName)
+);
 
-exports.templateFile = function() {
-    return path.join(
-        exports.projectRoot(),
-        "template.yaml"
-    );
-};
+exports.templateFile = () => path.join(
+    exports.projectRoot(),
+    "template.yaml"
+);
 
-exports.apiSourceRoot = function() {
-    return path.join(
-        exports.projectRoot(),
-        "src",
-        "api/"
-    );
-};
+exports.apiSourceRoot = () => path.dirname(require.resolve(SERVER_PACKAGE));
 
-exports.apiNodeRoot = function() {
-    return path.join(
-        exports.apiSourceRoot(),
-        "node_modules"
-    );
-};
+exports.apiCommon = () => path.join(
+    exports.apiSourceRoot(),
+    manifest.common
+);
 
-exports.apiCommonRoot = function(filename) {
-    var p = path.join(
-        exports.apiSourceRoot(),
-        "common/"
-    );
-    if(!filename) return p;
-    return path.join(p, filename);
-};
+exports.apiModules = () => path.join(
+    exports.apiSourceRoot(),
+    manifest.modules
+);
+
+exports.apiFile = (forFunction) => path.join(
+    exports.apiSourceRoot(),
+    manifest[forFunction]
+);
+

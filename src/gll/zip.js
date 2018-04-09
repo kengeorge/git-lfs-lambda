@@ -5,44 +5,57 @@ const K = require('kpromise');
 const log = K.log;
 const promise = K.promise;
 
-function zip(filename) {
+/**
+ * Zip the required deployment artifacts for the given function name.
+ *
+ * @param functionName
+ * @returns {*}
+ */
+function zip(functionName) {
     return promise((res, rej) => {
 
-        log("zipping %s", filename)
+        const deploymentPackage = paths.deploymentPackageFor(functionName);
+        const archive = startArchive(deploymentPackage, res, rej);
 
-        const deploymentPackage = paths.deploymentPackageFor(filename);
-
-        const output = fs.createWriteStream(deploymentPackage);
-        output.on('end', function() {
-            log("Done writing for %s", deploymentPackage);
-        });
-        output.on('close', function() {
-            log("%s zipped with %s bytes.", deploymentPackage, archive.pointer());
-            res(deploymentPackage);
-        });
-
-        const archive = archiver('zip');
-        archive.on('warning', function(warn) {
-            if(warn.code === 'ENOENT') {
-                log("Archiver - Error No Entity warning: %s", warn);
-            } else {
-                rej(new Error(warn));
-            }
-        });
-        archive.on('error', function(err) {
-            log("Error writing zip file %s: %s", deploymentPackage, err);
-            rej(new Error(err));
-        });
-
-        archive.pipe(output);
-
-        archive.file(paths.sourceFileForFunction(filename),
-            {name: filename + ".js"}
+        archive.file(paths.apiFile(functionName),
+            {name: functionName + ".js"}
         );
-        archive.directory(paths.apiCommonRoot(), 'common');
-        archive.directory(paths.apiNodeRoot(), 'node_modules');
+
+        //TODO not all functions need all common/modules dependencies; could split to reduce deployment size
+        archive.directory(paths.apiCommon(), 'common');
+        archive.directory(paths.apiModules(), 'node_modules');
         archive.finalize();
     });
+}
+
+function startArchive(archiveLocation, res, rej) {
+    const archive = archiver('zip');
+
+    const output = fs.createWriteStream(archiveLocation);
+    output.on('end', function() {
+        log("Done writing for %s", archiveLocation);
+    });
+    output.on('close', function() {
+        res({
+            location: archiveLocation,
+            size: archive.pointer()
+        });
+    });
+
+    archive.on('warning', function(warn) {
+        if(warn.code === 'ENOENT') {
+            log("Archiver - Error No Entity warning: %s", warn);
+        } else {
+            rej(new Error(warn));
+        }
+    });
+    archive.on('error', function(err) {
+        log("Error writing zip file %s: %s", archiveLocation, err);
+        rej(new Error(err));
+    });
+
+    archive.pipe(output);
+    return archive;
 }
 
 function readZipBits(zipFile) {

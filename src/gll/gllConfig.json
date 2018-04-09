@@ -2,9 +2,10 @@
   "formats": {
     "apiNameForRepo": "%s-git-lfs-lambda-api",
     "bucketNameForRepo": "%s-git-lfs-lambda",
-    "deploymentBucketName": "git-lfs-lambda-deployment",
+    "deploymentBucketName": "%s-git-lfs-lambda-deployment",
     "stackNameForRepo": "%s-git-lfs-lambda-stack",
-    "changeSetNameForRepo": "%s-git-lfs-lambda-changeset"
+    "changeSetNameForRepo": "%s-git-lfs-lambda-changeset",
+    "endpointForRepo": "%s-TODO-ENDPOINT"
   },
   "stage": "development",
   "hostname": "localhost",

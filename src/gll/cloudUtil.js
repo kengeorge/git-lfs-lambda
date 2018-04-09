@@ -2,58 +2,37 @@ const gll = require('./base.js');
 const cloud = new gll.configuredAWS.CloudFormation();
 
 const K = require('kpromise');
+const tap = K.tap;
 
-exports.createChangeSet = function(templateText, config) {
-    const exists = false;
-
+exports.createChangeSet = (templateText, config) => {
     const params = {
         TemplateBody: templateText,
         StackName: config.stackName,
         ChangeSetName: config.changeSetName,
-        ChangeSetType: exists ? 'UPDATE' : 'CREATE',
+        ChangeSetType: 'CREATE',
         Capabilities: ['CAPABILITY_IAM'],
         Parameters: [
             {
-                ParameterKey: 'bucketName',
+                ParameterKey: 'artifactsBucketName',
                 ParameterValue: config.bucketName
+            },
+            {
+                ParameterKey: 'endpoint',
+                ParameterValue: config.endpoint
             },
         ]
     };
-    /*
-    for(var name in config.lambdaFunctions) {
-        params.Parameters.push({
-            ParameterKey: name + "Uri",
-            ParameterValue: config.lambdaFunctions[name]
-        });
-    }
-    */
     return cloud.createChangeSet(params).promise()
-        .then(get('Id'))
-        .then((id) => {
-            return cloud.waitFor('changeSetCreateComplete', {ChangeSetName: id}).promise();
-        })
+        .then(tap((response) => cloud.waitFor('changeSetCreateComplete', {ChangeSetName: response.Id}).promise()))
 };
 
-exports.executeChangeSet = function(changeSetResponse){
-    const params = {
-        ChangeSetName: changeSetResponse.Id,
-    };
-    return cloud.executeChangeSet(params).promise()
-        .tap(function() {
-            const params = {
-                StackName: changeSetResponse.StackId
-            };
-            return cloud.waitFor('stackCreateComplete', params).promise();
-        });
-};
+exports.executeChangeSet = (changeSetResponse) =>
+    cloud
+        .executeChangeSet({ChangeSetName: changeSetResponse.Id}).promise()
+        .then(() => cloud.waitFor('stackCreateComplete', {StackName: changeSetResponse.StackId}).promise());
 
-exports.deleteStack = function(stackName) {
-    const params = {
-        StackName: stackName
-    };
-    return cloud.deleteStack(params).promise()
-        .tap(function() {
-            return cloud.waitFor('stackDeleteComplete', params).promise();
-        });
-};
+exports.deleteStack = (stackName) =>
+    cloud
+        .deleteStack({StackName: stackName}).promise()
+        .then(() => cloud.waitFor('stackDeleteComplete', {StackName: stackName}).promise());
 

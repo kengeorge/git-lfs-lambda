@@ -3,7 +3,7 @@ Transform: AWS::Serverless-2016-10-31
 Description: Serverless AWS implementation of the GIT-LFS server spec.
 
 Parameters:
-  bucketName:
+  artifactsBucketName:
     Type: String
   endpoint:
     Type: String
@@ -13,7 +13,7 @@ Resources:
     Type: 'AWS::S3::Bucket'
     Properties:
       AccessControl: Private
-      BucketName: !Ref bucketName
+      BucketName: !Ref artifactsBucketName
   batch:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -28,7 +28,7 @@ Resources:
           GLL_ENDPOINT: !Ref endpoint
       Policies:
         - S3CrudPolicy:
-          BucketName: !Ref artifactsBucket
+            BucketName: !Ref artifactsBucket
       Events:
         Api:
           Type: Api
@@ -49,7 +49,7 @@ Resources:
           GLL_ENDPOINT: !Ref endpoint
       Policies:
         - S3ReadPolicy:
-          BucketName: !Ref artifactsBucket
+            BucketName: !Ref artifactsBucket
       Events:
         Api:
           Type: Api
