@@ -5,13 +5,19 @@ const format = require('util').format;
 const SERVER_PACKAGE = "git-lfs-lambda-server";
 const manifest = require(SERVER_PACKAGE).manifest;
 
-//TODO
-exports.projectRoot = () => process.cwd();
+exports.projectRoot = () => path.dirname(require.main.filename);
 
-exports.configFilePath = () => exports.gllPath("apiConfig.json");
+exports.configFilePath = () => path.join(
+    exports.projectRoot(),
+    "gllConfig.json"
+);
 
 exports.gllPath = (fileName) => {
-    const p = path.dirname(require.main.filename);
+    const p = path.join(
+        exports.projectRoot(),
+        "src",
+        "gll"
+    );
     if(!fileName) return p;
     return path.join(p, fileName);
 };

@@ -1,12 +1,13 @@
-const gll = require('./base.js');
-const cloud = new gll.configuredAWS.CloudFormation();
-
+const AWS = require('aws-sdk');
 const K = require('kpromise');
 const tap = K.tap;
 
-exports.createChangeSet = (templateText, config) => {
+let cloud;
+exports.configure = (config) => cloud = new AWS.CloudFormation({region: config.awsRegion});
+
+exports.createChangeSet = config => {
     const params = {
-        TemplateBody: templateText,
+        TemplateBody: config.template,
         StackName: config.stackName,
         ChangeSetName: config.changeSetName,
         ChangeSetType: 'CREATE',

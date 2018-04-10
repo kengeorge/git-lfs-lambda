@@ -6,6 +6,5 @@
     "stackNameForRepo": "%s-git-lfs-lambda-stack",
     "changeSetNameForRepo": "%s-git-lfs-lambda-changeset",
     "endpointForRepo": "%s-TODO-ENDPOINT"
-  },
-  "awsRegion": "us-west-2"
+  }
 }

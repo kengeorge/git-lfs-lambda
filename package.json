@@ -2,6 +2,7 @@
   "name": "git-lfs-lambda",
   "version": "0.0.1",
   "description": "Deployment logic for git-lfs-lambda-server",
+  "main": "gll",
   "scripts": {
     "test": "jest"
   },
