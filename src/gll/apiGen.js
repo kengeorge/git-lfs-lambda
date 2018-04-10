@@ -34,12 +34,12 @@ function startRepoConfigFor(repoName) {
     return startWith(gll.apiConfig)
         .then(config => {
             config.repoName = repoName;
-            config.apiName = format(config.formats.apiNameForRepo, repoName).toLowerCase();
-            config.bucketName = format(config.formats.bucketNameForRepo, repoName).toLowerCase();
-            config.deploymentBucket = format(config.formats.deploymentBucketName, repoName).toLowerCase();
-            config.stackName = format(config.formats.stackNameForRepo, repoName).toLowerCase();
-            config.changeSetName = format(config.formats.changeSetNameForRepo, repoName).toLowerCase();
-            config.endpoint = format(config.formats.endpointForRepo, repoName).toLowerCase();
+            config.apiName = format(config.format.apiNameForRepo, repoName).toLowerCase();
+            config.bucketName = format(config.format.bucketNameForRepo, repoName).toLowerCase();
+            config.deploymentBucket = format(config.format.deploymentBucketName, repoName).toLowerCase();
+            config.stackName = format(config.format.stackNameForRepo, repoName).toLowerCase();
+            config.changeSetName = format(config.format.changeSetNameForRepo, repoName).toLowerCase();
+            config.endpoint = format(config.format.endpointForRepo, repoName).toLowerCase();
             return config;
         });
 }
