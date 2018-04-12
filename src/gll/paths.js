@@ -3,7 +3,7 @@ const os = require('os');
 const format = require('util').format;
 
 const SERVER_PACKAGE = "git-lfs-lambda-server";
-const manifest = require(SERVER_PACKAGE).manifest;
+const gllServer = require(SERVER_PACKAGE);
 
 exports.projectRoot = () => path.dirname(require.main.filename);
 
@@ -39,16 +39,18 @@ exports.apiSourceRoot = () => path.dirname(require.resolve(SERVER_PACKAGE));
 
 exports.apiCommon = () => path.join(
     exports.apiSourceRoot(),
-    manifest.common
+    gllServer.manifest.common
 );
 
 exports.apiModules = () => path.join(
     exports.apiSourceRoot(),
-    manifest.modules
+    gllServer.manifest.modules
 );
 
 exports.apiFile = (forFunction) => path.join(
     exports.apiSourceRoot(),
-    manifest[forFunction]
+    gllServer.manifest[forFunction]
 );
+
+exports.functionList = () => gllServer.functions;
 

@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://source.developers.google.com/p/ken-01/r/git-lfs-lambda"
+    "url": "https://github.com/kengeorge/git-lfs-lambda.git"
   },
   "keywords": [
     "git",
@@ -22,9 +22,9 @@
   "license": "MIT",
   "dependencies": {
     "archiver": "^2.1.1",
-    "aws-sdk": "^2.209.0",
-    "commander": "^2.15.0",
-    "git-lfs-lambda-server": "0.0.3",
+    "aws-sdk": "^2.224.1",
+    "commander": "^2.15.1",
+    "git-lfs-lambda-server": "^0.1.0",
     "kpromise": "^1.0.8",
     "npm": "^5.8.0"
   }

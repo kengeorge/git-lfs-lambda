@@ -19,16 +19,6 @@ const tap = K.tap;
 
 const zip = require('./zip');
 
-//TODO git-lfs-lambda-server's manifest could make this easier
-const functions = [
-    'batch',
-    'verifyObject',
-    'verifyLocks',
-    'listLocks',
-    'createLock',
-    'deleteLock'
-];
-
 const readFile = (filePath) =>
     promise((res, rej) =>
         fs.readFile(filePath, "utf-8", (err, data) => {
@@ -124,7 +114,7 @@ exports.generate = (repoName, options) =>
                 })
         ))
         .then(print("Uploading lambda functions..."))
-        .then(tap(config => startWith(functions)
+        .then(tap(config => startWith(paths.functionList())
             .then(forEach(f =>
                 startWith(upload(f, config.deploymentBucket))
                     .then(uri => config[f + 'Uri'] = uri)
