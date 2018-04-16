@@ -1,6 +1,6 @@
 {
   "name": "git-lfs-lambda",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Deployment logic for git-lfs-lambda-server",
   "main": "gll",
   "scripts": {
