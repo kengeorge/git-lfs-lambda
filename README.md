@@ -18,15 +18,15 @@ gll create myRepoName
 ```
 This will create and deploy the entire git-lfs-lambda server setup, configured for a repo named 'myRepoName'. The primary AWS artifacts that will be created are:
 
-* S3 bucket: myRepo-name-git-lfs-lambda
+* S3 bucket: myRepoName-git-lfs-lambda
     * The primary artifacts bucket where the repo's binary files will go.
-* S3 bucket: myRepo-name-git-lfs-lambda-deployment
+* S3 bucket: myRepoName-git-lfs-lambda-deployment
     * Another S3 bucket used in the deployment of the service. If desired, this can be removed once the deployment is complete.
-* Lambda functions: semicomplete-git-lfs-lambda-*
+* Lambda functions: myRepoName-git-lfs-lambda-*
     * There are 6 lambda functions in total. 5 as part of the [git-lfs server spec](https://github.com/git-lfs/git-lfs/blob/master/docs/spec.md) and an additional one to serve the optional 'verify' action.
-* REST API: semicomplete-git-lfs-lambda-stack
+* REST API: myRepoName-git-lfs-lambda-stack
     * The API Gateway endpoints for the git-lfs functions.
-* CloudFormation stack: semicomplete-git-lfs-lambda-stack
+* CloudFormation stack: myRepoName-git-lfs-lambda-stack
     * Entire service stack entity. 
  
 Details on other minor artifacts such as IAM roles and permissions can be found in the CloudFormation stack details.
