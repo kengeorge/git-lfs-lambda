@@ -25,7 +25,7 @@
     "aws-sdk": "^2.224.1",
     "commander": "^2.15.1",
     "git-lfs-lambda-server": "^0.1.0",
-    "kpromise": "^1.0.8",
+    "kpromise": "^1.1.1",
     "npm": "^5.8.0"
   }
 }
