@@ -1,6 +1,11 @@
 # Git LFS Lambda
 Git-lfs-lambda (GLL for short) is intended to be an easy, push-button solution to deploying a [git-lfs](https://git-lfs.github.com/) endpoint for a git repo. It uses [AWS Lambda](https://aws.amazon.com/lambda/) and [AWS API Gateway](https://aws.amazon.com/api-gateway/) to handle requests and instructs the git lfs client to store binary files in [AWS S3](https://aws.amazon.com/s3/). The actual server implementation is in a [separate project](https://github.com/kengeorge/git-lfs-lambda-server); this project focuses on the deployment of a service instance.
 
+# Caution!
+This project is not production ready. Using the create command will generate a production stack that does not implement any form of authorization or authentication. This means that anyone with the REST API endpoint url can use it to store files in your S3 bucket. This will eventually be corrected, but in the meantime use at your own risk!
+
+If you need a temporary solution that is less risky, the [core server code project](https://github.com/kengeorge/git-lfs-lambda-server) contains instructions on how to use it locally, independent of a full AWS deployment.
+
 
 ## Getting Started
 
@@ -33,7 +38,7 @@ Details on other minor artifacts such as IAM roles and permissions can be found 
 
 ### Delete
 ```bash
-gll delete cloudrepo
+gll delete myRepoName
 ```
 
 Delete will attempt to remove the entire git-lfs-lambda stack, as well as the deployment bucket. For safety, no non-empty buckets will be removed.

@@ -5,6 +5,7 @@ const paths = require('./paths.js')
 
 const s3 = require('./s3Util.js');
 const cloud = require('./cloudUtil.js');
+const api = require('./apiUtil.js');
 
 const K = require('kpromise');
 const decorate = K.decorate;
@@ -45,6 +46,7 @@ const startWithConfigFor = (repoName, options) =>
         })
         .then(tap(cloud.configure))
         .then(tap(s3.configure))
+        .then(tap(api.configure))
 ;
 
 const upload = (functionName, bucketName) =>
@@ -100,6 +102,10 @@ const removeIfEmpty = (bucket) =>
         })
 ;
 
+const getEndpointUrl = (config) =>
+    `https://${config.restApi.id}.execute-api.${config.awsRegion}.amazonaws.com/${config.stage.stageName}/${config.repoName}.git/info/lfs`
+;
+
 exports.generate = (repoName, options) =>
     startWithConfigFor(repoName, options)
         .then(print(`Creating stack for repo '${repoName}' in region '${options.region}...`))
@@ -125,13 +131,34 @@ exports.generate = (repoName, options) =>
         .then(decorate('template', compileTemplate))
 
         .then(print("Creating change set..."))
-        .then(cloud.createChangeSet)
+        .then(decorate('stack', config =>
+            startWith(config)
+                .then(cloud.createChangeSet)
+                .then(print("Executing change set (this may take a few minutes)..."))
+                .then(cloud.executeChangeSet)
+                .then(get('Stacks'))
+                .then(get('0'))
+        ))
 
-        .then(print("Executing change set..."))
-        .then(cloud.executeChangeSet)
+        .then(print("Getting rest API endpoint..."))
+        .then(decorate('restApi', config =>
+            startWith(config)
+                .then(get('stack'))
+                .then(get('StackName'))
+                .then(cloud.getStackApiId)
+                .then(api.getApi)
+        ))
+        .then(decorate('stage', config =>
+            startWith(config)
+                .then(get('restApi'))
+                .then(get('id'))
+                .then(api.getStage)
+        ))
+        .then(decorate('url', getEndpointUrl))
 
-        .then(res => log(`Created stack '${res.Stacks[0].StackName}' with id: ${res.Stacks[0].StackId}`))
-        .then(print("Done!"))
+        .then(print("Done! To create commit-able config, use:"))
+        .then(tap(config => log(`git config -f .lfsconfig lfs.url ${config.url}`)))
+
         .catch(err => log(`Creation failed with error: ${err.statusCode} - ${err.message}`))
 ;
 

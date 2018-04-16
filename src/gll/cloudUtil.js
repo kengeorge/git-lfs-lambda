@@ -1,5 +1,7 @@
 const AWS = require('aws-sdk');
 const K = require('kpromise');
+const filter = K.filter;
+const get = K.get;
 const tap = K.tap;
 
 let cloud;
@@ -26,6 +28,15 @@ exports.createChangeSet = config => {
     return cloud.createChangeSet(params).promise()
         .then(tap((response) => cloud.waitFor('changeSetCreateComplete', {ChangeSetName: response.Id}).promise()))
 };
+
+exports.getStackApiId = (stackName) =>
+    cloud
+        .listStackResources({StackName: stackName}).promise()
+        .then(get('StackResourceSummaries'))
+        .then(filter(resource => resource.LogicalResourceId === "ServerlessRestApi"))
+        .then(get('0'))
+        .then(get('PhysicalResourceId'))
+;
 
 exports.executeChangeSet = (changeSetResponse) =>
     cloud
